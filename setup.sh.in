@@ -52,4 +52,4 @@ add_if_not_in_var() {
 
 # Path to various resources used by shell/python scripts and demos
 #   e.g. configuration files, protos, road geometries
-add_if_not_in_var MULTILANE_RESOURCE_ROOT $AMENT_CURRENT_PREFIX/share/multilane
+add_if_not_in_var MULTILANE_RESOURCE_ROOT $AMENT_CURRENT_PREFIX/share/maliput_multilane

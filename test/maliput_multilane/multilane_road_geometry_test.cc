@@ -102,7 +102,6 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
   api::GeoPosition geo_pos{kArcRadius, -kArcRadius - kLength / 2., 0.};
 
   api::GeoPosition nearest_position{};
-  double distance{};
   api::RoadPositionResult result = rg->ToRoadPosition(geo_pos);
 
   // Expect to locate the point centered within lane1 (straight segment).

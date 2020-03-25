@@ -58,7 +58,7 @@ TEST_F(Test2x2Intersection, CheckRoadGeometryProperties) {
   EXPECT_NEAR(dut_->linear_tolerance(), 0.01, 1e-6);
   EXPECT_NEAR(dut_->angular_tolerance(), 0.5 * M_PI / 180., 1e-6);
   EXPECT_NEAR(dut_->scale_length(), 1, 1e-6);
-  EXPECT_EQ(dut_->CheckInvariants().size(), 0);
+  EXPECT_TRUE(dut_->CheckInvariants().empty());
   EXPECT_EQ(dut_->ById().GetJunction(JunctionId("j:intersection"))->num_segments(), 10);
 }
 

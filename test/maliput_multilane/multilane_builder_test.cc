@@ -1346,20 +1346,20 @@ class MultilaneBuilderMultilaneCrossTest : public ::testing::Test {
 
     EXPECT_EQ(rg->id(), api::RoadGeometryId("multilane-cross"));
 
-    EXPECT_EQ(rg->num_junctions(), junction_truth_map.size());
+    EXPECT_EQ(rg->num_junctions(), static_cast<int>(junction_truth_map.size()));
     for (int i = 0; i < rg->num_junctions(); i++) {
       // Checks each Junction.
       const api::Junction* const junction = rg->junction(i);
       EXPECT_NE(junction_truth_map.find(junction->id().string()), junction_truth_map.end());
       const std::vector<std::string>& segment_ids = junction_truth_map.at(junction->id().string());
-      EXPECT_EQ(segment_ids.size(), junction->num_segments());
+      EXPECT_EQ(static_cast<int>(segment_ids.size()), junction->num_segments());
       for (int j = 0; j < junction->num_segments(); j++) {
         // Checks each Segment.
         const api::Segment* const segment = junction->segment(j);
         EXPECT_EQ(segment->id().string(), segment_ids[j]);
         EXPECT_NE(segment_truth_map.find(segment->id().string()), segment_truth_map.end());
         const std::vector<std::string>& lane_ids = segment_truth_map.at(segment->id().string());
-        EXPECT_EQ(segment->num_lanes(), lane_ids.size());
+        EXPECT_EQ(segment->num_lanes(), static_cast<int>(lane_ids.size()));
         for (int k = 0; k < segment->num_lanes(); k++) {
           // Checks each Lane.
           const api::Lane* const lane = segment->lane(k);
@@ -1367,20 +1367,20 @@ class MultilaneBuilderMultilaneCrossTest : public ::testing::Test {
           EXPECT_NE(lane_truth_map.find(lane->id().string()), lane_truth_map.end());
           const BranchPointLaneIds& bp_lane_ids = lane_truth_map.at(lane->id().string());
           const api::BranchPoint* const start_bp = lane->GetBranchPoint(api::LaneEnd::kStart);
-          EXPECT_EQ(start_bp->GetASide()->size(), bp_lane_ids.start_a_side.size());
+          EXPECT_EQ(start_bp->GetASide()->size(), static_cast<int>(bp_lane_ids.start_a_side.size()));
           for (int lane_index = 0; lane_index < start_bp->GetASide()->size(); lane_index++) {
             EXPECT_EQ(start_bp->GetASide()->get(lane_index).lane->id().string(), bp_lane_ids.start_a_side[lane_index]);
           }
-          EXPECT_EQ(start_bp->GetBSide()->size(), bp_lane_ids.start_b_side.size());
+          EXPECT_EQ(start_bp->GetBSide()->size(), static_cast<int>(bp_lane_ids.start_b_side.size()));
           for (int lane_index = 0; lane_index < start_bp->GetBSide()->size(); lane_index++) {
             EXPECT_EQ(start_bp->GetBSide()->get(lane_index).lane->id().string(), bp_lane_ids.start_b_side[lane_index]);
           }
           const api::BranchPoint* const end_bp = lane->GetBranchPoint(api::LaneEnd::kFinish);
-          EXPECT_EQ(end_bp->GetASide()->size(), bp_lane_ids.finish_a_side.size());
+          EXPECT_EQ(end_bp->GetASide()->size(), static_cast<int>(bp_lane_ids.finish_a_side.size()));
           for (int lane_index = 0; lane_index < end_bp->GetASide()->size(); lane_index++) {
             EXPECT_EQ(end_bp->GetASide()->get(lane_index).lane->id().string(), bp_lane_ids.finish_a_side[lane_index]);
           }
-          EXPECT_EQ(end_bp->GetBSide()->size(), bp_lane_ids.finish_b_side.size());
+          EXPECT_EQ(end_bp->GetBSide()->size(), static_cast<int>(bp_lane_ids.finish_b_side.size()));
           for (int lane_index = 0; lane_index < end_bp->GetBSide()->size(); lane_index++) {
             EXPECT_EQ(end_bp->GetBSide()->get(lane_index).lane->id().string(), bp_lane_ids.finish_b_side[lane_index]);
           }

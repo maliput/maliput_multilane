@@ -454,7 +454,7 @@ GTEST_TEST(GroupTest, NoConnection) {
   std::unique_ptr<Group> dut = GroupFactory().Make(kId);
 
   EXPECT_EQ(dut->id(), kId);
-  EXPECT_EQ(dut->connections().size(), 0);
+  EXPECT_TRUE(dut->connections().empty());
 }
 
 GTEST_TEST(GroupTest, WithConnections) {
@@ -466,7 +466,7 @@ GTEST_TEST(GroupTest, WithConnections) {
   std::unique_ptr<Group> dut = GroupFactory().Make(kId, {line_connection.get(), arc_connection.get()});
 
   EXPECT_EQ(dut->id(), kId);
-  EXPECT_EQ(dut->connections().size(), 2);
+  EXPECT_EQ(static_cast<int>(dut->connections().size()), 2);
   EXPECT_EQ(dut->connections()[0], line_connection.get());
   EXPECT_EQ(dut->connections()[1], arc_connection.get());
 }
@@ -479,11 +479,11 @@ GTEST_TEST(GroupTest, AddConnections) {
 
   std::unique_ptr<Group> dut = GroupFactory().Make(kId, {line_connection.get()});
 
-  EXPECT_EQ(dut->connections().size(), 1);
+  EXPECT_EQ(static_cast<int>(dut->connections().size()), 1);
   EXPECT_EQ(dut->connections()[0], line_connection.get());
 
   dut->Add(arc_connection.get());
-  EXPECT_EQ(dut->connections().size(), 2);
+  EXPECT_EQ(static_cast<int>(dut->connections().size()), 2);
   EXPECT_EQ(dut->connections()[0], line_connection.get());
   EXPECT_EQ(dut->connections()[1], arc_connection.get());
 }

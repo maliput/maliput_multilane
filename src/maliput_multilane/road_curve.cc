@@ -101,12 +101,12 @@ RoadCurve::RoadCurve(double linear_tolerance, double scale_length, const CubicPo
   const drake::VectorX<double> default_parameters = drake::VectorX<double>::Zero(2);
 
   // Instantiates s(p) and p(s) mappings with default values.
-  const drake::systems::AntiderivativeFunction<double>::SpecifiedValues s_from_p_func_values(initial_p_value,
-                                                                                             default_parameters);
+  const drake::systems::AntiderivativeFunction<double>::IntegrableFunctionContext s_from_p_func_values(
+      initial_p_value, default_parameters);
   s_from_p_func_ = std::make_unique<drake::systems::AntiderivativeFunction<double>>(ArcLengthDerivativeFunction(this),
                                                                                     s_from_p_func_values);
 
-  const drake::systems::ScalarInitialValueProblem<double>::SpecifiedValues p_from_s_ivp_values(
+  const drake::systems::ScalarInitialValueProblem<double>::ScalarOdeContext p_from_s_ivp_values(
       initial_s_value, initial_p_value, default_parameters);
   p_from_s_ivp_ = std::make_unique<drake::systems::ScalarInitialValueProblem<double>>(InverseArcLengthODEFunction(this),
                                                                                       p_from_s_ivp_values);
@@ -162,12 +162,12 @@ std::function<double(double)> RoadCurve::OptimizeCalcSFromP(double r) const {
   const double absolute_tolerance = relative_tolerance_ * 1.;
   if (computation_policy() == ComputationPolicy::kPreferAccuracy && !AreFastComputationsAccurate(r)) {
     // Populates parameter vector with (r, h) coordinate values.
-    drake::systems::AntiderivativeFunction<double>::SpecifiedValues values;
-    values.k = (drake::VectorX<double>(2) << r, 0.0).finished();
+    drake::systems::AntiderivativeFunction<double>::IntegrableFunctionContext context;
+    context.k = (drake::VectorX<double>(2) << r, 0.0).finished();
     // Prepares dense output for shared ownership, as std::function
     // instances only take copyable callables.
     const std::shared_ptr<drake::systems::ScalarDenseOutput<double>> dense_output{
-        s_from_p_func_->MakeDenseEvalFunction(1.0, values)};
+        s_from_p_func_->MakeDenseEvalFunction(1.0, context)};
     MALIPUT_DEMAND(dense_output->start_time() <= 0.);
     MALIPUT_DEMAND(dense_output->end_time() >= 1.);
     return [dense_output, absolute_tolerance](double p) -> double {
@@ -187,9 +187,9 @@ std::function<double(double)> RoadCurve::OptimizeCalcSFromP(double r) const {
 
 double RoadCurve::CalcSFromP(double p, double r) const {
   // Populates parameter vector with (r, h) coordinate values.
-  drake::systems::AntiderivativeFunction<double>::SpecifiedValues values;
-  values.k = (drake::VectorX<double>(2) << r, 0.0).finished();
-  return s_from_p_func_->Evaluate(p, values);
+  drake::systems::AntiderivativeFunction<double>::IntegrableFunctionContext context;
+  context.k = (drake::VectorX<double>(2) << r, 0.0).finished();
+  return s_from_p_func_->Evaluate(p, context);
 }
 
 std::function<double(double)> RoadCurve::OptimizeCalcPFromS(double r) const {
@@ -198,12 +198,12 @@ std::function<double(double)> RoadCurve::OptimizeCalcPFromS(double r) const {
   const double absolute_tolerance = relative_tolerance_ * full_length;
   if (computation_policy() == ComputationPolicy::kPreferAccuracy && !AreFastComputationsAccurate(r)) {
     // Populates parameter vector with (r, h) coordinate values.
-    drake::systems::ScalarInitialValueProblem<double>::SpecifiedValues values;
-    values.k = (drake::VectorX<double>(2) << r, 0.0).finished();
+    drake::systems::ScalarInitialValueProblem<double>::ScalarOdeContext context;
+    context.k = (drake::VectorX<double>(2) << r, 0.0).finished();
     // Prepares dense output for shared ownership, as std::function
     // instances only take copyable callables.
     const std::shared_ptr<drake::systems::ScalarDenseOutput<double>> dense_output{
-        p_from_s_ivp_->DenseSolve(full_length, values)};
+        p_from_s_ivp_->DenseSolve(full_length, context)};
     MALIPUT_DEMAND(dense_output->start_time() <= 0.);
     MALIPUT_DEMAND(dense_output->end_time() >= full_length);
     return [dense_output, full_length, absolute_tolerance](double s) -> double {

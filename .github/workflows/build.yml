@@ -3,15 +3,16 @@ name: Compile and test
 on: [push, pull_request]
 
 env:
-  CLONE_NAME: maliput-multilane
   PACKAGE_NAME: maliput_multilane
   ROS_DISTRO: dashing
-  ROS_WS: ros_ws
+  ROS_WS: maliput_ws
 
 jobs:
   compile_and_test:
     name: Compile and test
     runs-on: ubuntu-18.04
+    container:
+      image: ubuntu:18.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -27,32 +28,41 @@ jobs:
         repository: ToyotaResearchInstitute/drake-vendor
         path: ${{ env.ROS_WS }}/src/drake_vendor
         token: ${{ secrets.MALIPUT_TOKEN }}
-    # use setup-ros2 action to get vcs, rosdep, and colcon
-    - uses: ros-tooling/setup-ros2@0.0.11
+    - uses: actions/checkout@v2
+      with:
+        repository: ToyotaResearchInstitute/dsim-repos-index
+        path: dsim-repos-index
+        token: ${{ secrets.MALIPUT_TOKEN }}
+    # use setup-ros action to get vcs, rosdep, and colcon
+    - uses: ros-tooling/setup-ros@0.0.25
+    # install drake_vendor prereqs using dsim-repos-index/tools/prereqs.lib
+    - name: install drake_vendor prereqs
+      shell: bash
+      working-directory: ${{ env.ROS_WS }}/src/drake_vendor
+      run: ${GITHUB_WORKSPACE}/dsim-repos-index/tools/prereqs-install -t drake .
     # clone public dependencies
     - name: vcs import
       shell: bash
-      working-directory: ${{runner.workspace}}/${{ env.CLONE_NAME }}/${{ env.ROS_WS }}
+      working-directory: ${{ env.ROS_WS }}
       run: vcs import src < src/${PACKAGE_NAME}/.github/dependencies.repos
-    - name: colcon graph
+    - run: colcon graph
       shell: bash
-      working-directory: ${{runner.workspace}}/${{ env.CLONE_NAME }}/${{ env.ROS_WS }}
-      run: colcon graph
+      working-directory: ${{ env.ROS_WS }}
     - name: rosdep install
       shell: bash
-      working-directory: ${{runner.workspace}}/${{ env.CLONE_NAME }}/${{ env.ROS_WS }}
+      working-directory: ${{ env.ROS_WS }}
       run: |
         rosdep update;
         rosdep install  -i -y --rosdistro ${ROS_DISTRO} --skip-keys "pybind11" --from-paths src
     - name: colcon build
       shell: bash
-      working-directory: ${{runner.workspace}}/${{ env.CLONE_NAME }}/${{ env.ROS_WS }}
+      working-directory: ${{ env.ROS_WS }}
       run: |
         . /opt/ros/${ROS_DISTRO}/setup.bash;
         colcon build --packages-up-to ${PACKAGE_NAME} --event-handlers=console_direct+;
     - name: colcon test
       shell: bash
-      working-directory: ${{runner.workspace}}/${{ env.CLONE_NAME }}/${{ env.ROS_WS }}
+      working-directory: ${{ env.ROS_WS }}
       run: |
         . /opt/ros/${ROS_DISTRO}/setup.bash;
         colcon test --packages-select ${PACKAGE_NAME} --event-handlers=console_direct+;

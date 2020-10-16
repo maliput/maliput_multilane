@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="2">
+<package format="3">
   <name>maliput_multilane</name>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
   <description>Maliput Multilane.</description>
   <maintainer email="daniel.stonier@tri.global">Daniel Stonier</maintainer>
-  <license>BSD 3-Clause</license>
+  <license file="LICENSE">BSD 3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>ament_cmake_doxygen</build_depend>

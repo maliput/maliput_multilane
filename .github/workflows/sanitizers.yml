@@ -1,6 +1,10 @@
-name: gcc
+name: clang
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 env:
   PACKAGE_NAME: maliput_multilane
@@ -9,10 +13,26 @@ env:
 
 jobs:
   compile_and_test:
-    name: Compile and test
+    name: Compile and test with sanitizer
     runs-on: ubuntu-18.04
     container:
       image: ubuntu:18.04
+    strategy:
+      matrix:
+        sanitizer: [none, asan, ubsan, tsan]
+        include:
+          - sanitizer: none
+            COMPILER_FLAG: ''
+          - sanitizer: asan
+            COMPILER_FLAG: ' -DADDRESS_SANITIZER=On'
+          - sanitizer: tsan
+            COMPILER_FLAG: ' -DTHREAD_SANITIZER=On'
+          - sanitizer: ubsan
+            COMPILER_FLAG: ' -DUNDEFINED_SANITIZER=On'
+    env:
+      CC: clang
+      CXX: clang++
+      LINKER_PATH: /usr/bin/llvm-ld
     steps:
     - uses: actions/checkout@v2
       with:
@@ -40,6 +60,9 @@ jobs:
       shell: bash
       working-directory: ${{ env.ROS_WS }}/src/drake_vendor
       run: ${GITHUB_WORKSPACE}/dsim-repos-index/tools/prereqs-install -t drake .
+    - name: clang 8 install
+      shell: bash
+      run: ${{ env.ROS_WS }}/src/${{ env.PACKAGE_NAME }}/.github/clang_suite_installation.sh
     # clone public dependencies
     - name: vcs import
       shell: bash
@@ -57,9 +80,14 @@ jobs:
     - name: colcon build
       shell: bash
       working-directory: ${{ env.ROS_WS }}
+      env:
+        COMPILER_FLAG: ${{ matrix.COMPILER_FLAG }}
       run: |
         . /opt/ros/${ROS_DISTRO}/setup.bash;
-        colcon build --packages-up-to ${PACKAGE_NAME} --event-handlers=console_direct+;
+        colcon build --cmake-args -DCMAKE_LINKER=${LINKER_PATH} \
+            ${COMPILER_FLAG} \
+            --packages-up-to ${PACKAGE_NAME} \
+            --event-handlers=console_direct+;
     - name: colcon test
       shell: bash
       working-directory: ${{ env.ROS_WS }}

@@ -32,6 +32,11 @@ jobs:
         repository: ToyotaResearchInstitute/drake-vendor
         path: ${{ env.ROS_WS }}/src/drake_vendor
         token: ${{ secrets.MALIPUT_TOKEN }}
+    - uses: actions/checkout@v2
+      with:
+        repository: ToyotaResearchInstitute/dsim-repos-index
+        path: dsim-repos-index
+        token: ${{ secrets.MALIPUT_TOKEN }}
     # use setup-ros action to get vcs, rosdep, and colcon
     - uses: ros-tooling/setup-ros@0.0.25
     # install drake_vendor prereqs using dsim-repos-index/tools/prereqs.lib

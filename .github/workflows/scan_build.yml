@@ -1,4 +1,4 @@
-name: clang
+name: scan_build
 
 on:
   push:
@@ -12,27 +12,11 @@ env:
   ROS_WS: maliput_ws
 
 jobs:
-  compile_and_test:
-    name: Compile and test with sanitizer
+  static_analysis:
+    name: Static analysis
     runs-on: ubuntu-18.04
     container:
       image: ubuntu:18.04
-    strategy:
-      matrix:
-        sanitizer: [none, asan, ubsan, tsan]
-        include:
-          - sanitizer: none
-            COMPILER_FLAG: ''
-          - sanitizer: asan
-            COMPILER_FLAG: ' -DADDRESS_SANITIZER=On'
-          - sanitizer: tsan
-            COMPILER_FLAG: ' -DTHREAD_SANITIZER=On'
-          - sanitizer: ubsan
-            COMPILER_FLAG: ' -DUNDEFINED_SANITIZER=On'
-    env:
-      CC: clang
-      CXX: clang++
-      LINKER_PATH: /usr/bin/llvm-ld
     steps:
     - uses: actions/checkout@v2
       with:
@@ -77,21 +61,12 @@ jobs:
       run: |
         rosdep update;
         rosdep install  -i -y --rosdistro ${ROS_DISTRO} --skip-keys "pybind11" --from-paths src
-    - name: colcon build
+    - name: scan_build
       shell: bash
       working-directory: ${{ env.ROS_WS }}
-      env:
-        COMPILER_FLAG: ${{ matrix.COMPILER_FLAG }}
       run: |
         . /opt/ros/${ROS_DISTRO}/setup.bash;
-        colcon build --cmake-args -DCMAKE_LINKER=${LINKER_PATH} \
-            ${COMPILER_FLAG} \
+        ./src/${PACKAGE_NAME}/.github/run_scan_build \
+            --cmake-args -DCMAKE_LINKER=/usr/bin/llvm-ld \
             --packages-up-to ${PACKAGE_NAME} \
             --event-handlers=console_direct+;
-    - name: colcon test
-      shell: bash
-      working-directory: ${{ env.ROS_WS }}
-      run: |
-        . /opt/ros/${ROS_DISTRO}/setup.bash;
-        colcon test --packages-select ${PACKAGE_NAME} --event-handlers=console_direct+;
-        colcon test-result --verbose;

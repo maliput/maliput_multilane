@@ -584,6 +584,8 @@ class Builder : public BuilderBase {
 
     bool operator()(const Endpoint& lhs, const Endpoint& rhs) const {
       switch (fuzzy_compare(rhs.xy().x(), lhs.xy().x())) {
+        default:
+          break;
         case -1: {
           return true;
         }
@@ -592,6 +594,8 @@ class Builder : public BuilderBase {
         }
         case 0: {
           switch (fuzzy_compare(rhs.xy().y(), lhs.xy().y())) {
+            default:
+              break;
             case -1: {
               return true;
             }
@@ -600,6 +604,8 @@ class Builder : public BuilderBase {
             }
             case 0: {
               switch (fuzzy_compare(rhs.z().z(), lhs.z().z())) {
+                default:
+                  break;
                 case -1: {
                   return true;
                 }

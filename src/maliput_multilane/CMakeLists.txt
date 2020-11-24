@@ -19,6 +19,13 @@ set(MALIPUT_MULTILANE_SOURCES
 
 add_library(maliput_multilane ${MALIPUT_MULTILANE_SOURCES})
 
+add_library(maliput_multilane::maliput_multilane ALIAS maliput_multilane)
+
+set_target_properties(maliput_multilane
+  PROPERTIES
+    OUTPUT_NAME maliput_multilane
+)
+
 target_include_directories(maliput_multilane
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>

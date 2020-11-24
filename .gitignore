@@ -33,3 +33,8 @@
 
 # Python caches
 __pycache__
+
+# Eclipse project files
+.cproject
+.project
+.settings

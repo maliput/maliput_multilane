@@ -120,14 +120,14 @@ class Lane : public api::Lane {
 
   api::HBounds do_elevation_bounds(double, double) const override { return elevation_bounds_; }
 
-  api::GeoPosition DoToGeoPosition(const api::LanePosition& lane_pos) const override;
+  api::InertialPosition DoToInertialPosition(const api::LanePosition& lane_pos) const override;
 
   api::Rotation DoGetOrientation(const api::LanePosition& lane_pos) const override;
 
   api::LanePosition DoEvalMotionDerivatives(const api::LanePosition& position,
                                             const api::IsoLaneVelocity& velocity) const override;
 
-  api::LanePositionResult DoToLanePosition(const api::GeoPosition& geo_position) const override;
+  api::LanePositionResult DoToLanePosition(const api::InertialPosition& inertial_position) const override;
 
   const api::LaneId id_;
   const api::Segment* segment_{};

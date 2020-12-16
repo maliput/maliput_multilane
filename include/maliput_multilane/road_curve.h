@@ -63,7 +63,7 @@ enum class ComputationPolicy {
 /// As per notation, p is the parameter of the reference curve, not necessarily
 /// arc length s, and function interpolations and function derivatives as well
 /// as headings and heading derivatives are expressed in world coordinates,
-/// which is the same frame as api::GeoPosition.
+/// which is the same frame as api::InertialPosition.
 /// By implementing this interface the road curve is defined and complete.
 ///
 /// The geometry here revolves around an abstract "world function"
@@ -172,7 +172,7 @@ class RoadCurve {
   /// @return The total path length of the reference curve.
   virtual double l_max() const = 0;
 
-  /// Converts a @p geo_coordinate in the world frame to the composed curve
+  /// Converts a @p inertial_coordinate in the world frame to the composed curve
   /// frame, i.e., the superposition of the reference curve, elevation and
   /// superelevation polynomials. The resulting coordinates [p, r, h] are
   /// saturated in the following domain ranges.
@@ -181,7 +181,7 @@ class RoadCurve {
   /// - r: [@p r_min, @p r_max]
   /// - h: [@p height_bounds]
   ///
-  /// @param geo_coordinate A 3D vector in the world frame to be converted to
+  /// @param inertial_coordinate A 3D vector in the world frame to be converted to
   /// the composed curve frame.
   /// @param r_min Minimum lateral distance from the composed curve to saturate,
   /// if it is necessary, the result in the given direction.
@@ -190,9 +190,9 @@ class RoadCurve {
   /// @param height_bounds An api::HBounds object that represents the elevation
   /// bounds of the surface mapping.
   /// @return A 3D vector [p, r, h], that represent the domain coordinates of
-  /// the world function, that gives as world function output @p geo_cooridnate.
-  virtual drake::Vector3<double> ToCurveFrame(const drake::Vector3<double>& geo_coordinate, double r_min, double r_max,
-                                              const api::HBounds& height_bounds) const = 0;
+  /// the world function, that gives as world function output @p inertial_coordinate.
+  virtual drake::Vector3<double> ToCurveFrame(const drake::Vector3<double>& inertial_coordinate, double r_min,
+                                              double r_max, const api::HBounds& height_bounds) const = 0;
 
   /// Checks that there are no self-intersections (singularities) in the volume
   /// created by applying the constant @p r_min, @p r_max and @p height_bounds

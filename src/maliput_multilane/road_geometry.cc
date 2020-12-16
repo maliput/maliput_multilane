@@ -19,7 +19,7 @@ api::RoadPositionResult FromLanePositionResult(const api::Lane* const lane, cons
   return {api::RoadPosition{lane, result.lane_position}, result.nearest_position, result.distance};
 }
 
-// Evaluates if the result of `lane->ToLanePosition()` using `geo_position`
+// Evaluates if the result of `lane->ToLanePosition()` using `inertial_position`
 // provides a closer api::RoadPositionResult than `road_position_result`.
 //
 // _Closer_ means:
@@ -38,13 +38,13 @@ api::RoadPositionResult FromLanePositionResult(const api::Lane* const lane, cons
 // The following preconditions should be met:
 //
 // `lane` must not be nullptr.
-const api::RoadPositionResult EvaluateRoadPositionResult(const api::GeoPosition& geo_position,
+const api::RoadPositionResult EvaluateRoadPositionResult(const api::InertialPosition& inertial_position,
                                                          const double linear_tolerance, const api::Lane* const lane,
                                                          const api::RoadPositionResult& road_position_result) {
   MALIPUT_DEMAND(lane != nullptr);
 
   const api::RoadPositionResult new_road_position_result =
-      FromLanePositionResult(lane, lane->ToLanePosition(geo_position));
+      FromLanePositionResult(lane, lane->ToLanePosition(inertial_position));
 
   const double delta = new_road_position_result.distance - road_position_result.distance;
   if (delta > linear_tolerance) {  // new_distance is bigger than *distance, so this LanePosition is discarded.
@@ -104,7 +104,7 @@ const api::Junction* RoadGeometry::do_junction(int index) const { return junctio
 
 const api::BranchPoint* RoadGeometry::do_branch_point(int index) const { return branch_points_[index].get(); }
 
-api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::GeoPosition& geo_position,
+api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::InertialPosition& inertial_position,
                                                        const std::optional<api::RoadPosition>& hint) const {
   api::RoadPositionResult road_position_result;
 
@@ -116,7 +116,7 @@ api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::GeoPosition& g
   // extends beyond only adjacent lanes.
   if (hint.has_value()) {
     MALIPUT_DEMAND(hint->lane != nullptr);
-    road_position_result = FromLanePositionResult(hint->lane, hint->lane->ToLanePosition(geo_position));
+    road_position_result = FromLanePositionResult(hint->lane, hint->lane->ToLanePosition(inertial_position));
     if (road_position_result.distance != 0.) {
       // Loop through ongoing lanes at both ends of the current lane, to find
       // the position associated with the first found containing lane or the
@@ -125,7 +125,7 @@ api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::GeoPosition& g
         const api::LaneEndSet* ends = hint->lane->GetOngoingBranches(which_end);
         for (int i = 0; i < ends->size(); ++i) {
           road_position_result =
-              EvaluateRoadPositionResult(geo_position, linear_tolerance_, ends->get(i).lane, road_position_result);
+              EvaluateRoadPositionResult(inertial_position, linear_tolerance_, ends->get(i).lane, road_position_result);
         }
       }
     }
@@ -138,14 +138,14 @@ api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::GeoPosition& g
     MALIPUT_DEMAND(junction(0)->num_segments() > 0);
     MALIPUT_DEMAND(junction(0)->segment(0)->num_lanes() > 0);
     const api::Lane* lane = this->junction(0)->segment(0)->lane(0);
-    road_position_result = FromLanePositionResult(lane, lane->ToLanePosition(geo_position));
+    road_position_result = FromLanePositionResult(lane, lane->ToLanePosition(inertial_position));
     for (int i = 0; i < num_junctions(); ++i) {
       const api::Junction* junction = this->junction(i);
       for (int j = 0; j < junction->num_segments(); ++j) {
         const api::Segment* segment = junction->segment(j);
         for (int k = 0; k < segment->num_lanes(); ++k) {
           road_position_result =
-              EvaluateRoadPositionResult(geo_position, linear_tolerance_, segment->lane(k), road_position_result);
+              EvaluateRoadPositionResult(inertial_position, linear_tolerance_, segment->lane(k), road_position_result);
         }
       }
     }
@@ -154,9 +154,9 @@ api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::GeoPosition& g
   return road_position_result;
 }
 
-std::vector<api::RoadPositionResult> RoadGeometry::DoFindRoadPositions(const api::GeoPosition& geo_position,
+std::vector<api::RoadPositionResult> RoadGeometry::DoFindRoadPositions(const api::InertialPosition& inertial_position,
                                                                        double radius) const {
-  maliput::common::unused(geo_position);
+  maliput::common::unused(inertial_position);
   maliput::common::unused(radius);
   MALIPUT_ABORT_MESSAGE("Unimplemented method.");
 }

@@ -52,20 +52,20 @@ class RoadGeometry : public api::RoadGeometry {
   const IdIndex& DoById() const override { return id_index_; }
 
   // Returns a RoadPositionResult for a lane containing the provided
-  // `geo_position`.
+  // `inertial_position`.
   // Either if there is or not a containing lane, the position is returned for
-  // the lane whose centerline curve is closest to `geo_position`. In other
+  // the lane whose centerline curve is closest to `inertial_position`. In other
   // words, for the lane whose LanePosition makes the r coordinate be the
   // smallest.
   // When `hint` is provided, the search is restricted to the `hint->lane`
   // and lanes adjacent to `hint->lane`.
   // TODO(agalbachicar) Take into account `h` coordinate to return by minimum
   //                    `h` and then minimum `r`.
-  api::RoadPositionResult DoToRoadPosition(const api::GeoPosition& geo_position,
+  api::RoadPositionResult DoToRoadPosition(const api::InertialPosition& inertial_position,
                                            const std::optional<api::RoadPosition>& hint) const override;
 
   // TODO(agalbachicar) Needs implementation.
-  std::vector<api::RoadPositionResult> DoFindRoadPositions(const api::GeoPosition& geo_position,
+  std::vector<api::RoadPositionResult> DoFindRoadPositions(const api::InertialPosition& inertial_position,
                                                            double radius) const override;
 
   double do_linear_tolerance() const override { return linear_tolerance_; }

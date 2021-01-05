@@ -19,7 +19,7 @@ namespace maliput {
 namespace multilane {
 namespace {
 
-using api::GeoPosition;
+using api::InertialPosition;
 using api::JunctionId;
 using api::Lane;
 using api::LaneEnd;
@@ -67,123 +67,123 @@ TEST_F(Test2x2Intersection, CheckLaneNamesAndPositions) {
     LaneId id;
     double length;
     // These are positions that should fall within the lane.
-    std::vector<GeoPosition> geo_positions;
+    std::vector<InertialPosition> inertial_positions;
   };
   const std::vector<ExpectedLane> test_cases{
       // Segment west of intersection.
       // East-bound lane.
       {LaneId("l:w_segment_0"),
        kApproachLength,
-       {GeoPosition(-kStartDistance, -kHalfLaneWidth, 0), GeoPosition(-kMidDistance, -kHalfLaneWidth, 0),
-        GeoPosition(-kEntryDistance, -kLaneWidth, 0)}},
+       {InertialPosition(-kStartDistance, -kHalfLaneWidth, 0), InertialPosition(-kMidDistance, -kHalfLaneWidth, 0),
+        InertialPosition(-kEntryDistance, -kLaneWidth, 0)}},
       // West-bound lane.
       {LaneId("l:w_segment_1"),
        kApproachLength,
-       {GeoPosition(-kStartDistance, kHalfLaneWidth, 0), GeoPosition(-kMidDistance, kHalfLaneWidth, 0),
-        GeoPosition(-kEntryDistance, kHalfLaneWidth, 0)}},
+       {InertialPosition(-kStartDistance, kHalfLaneWidth, 0), InertialPosition(-kMidDistance, kHalfLaneWidth, 0),
+        InertialPosition(-kEntryDistance, kHalfLaneWidth, 0)}},
 
       // Segment east of intersection.
       // East-bound lane.
       {LaneId("l:e_segment_0"),
        kApproachLength,
-       {GeoPosition(kEntryDistance, -kHalfLaneWidth, 0), GeoPosition(kMidDistance, -kHalfLaneWidth, 0),
-        GeoPosition(kStartDistance, -kHalfLaneWidth, 0)}},
+       {InertialPosition(kEntryDistance, -kHalfLaneWidth, 0), InertialPosition(kMidDistance, -kHalfLaneWidth, 0),
+        InertialPosition(kStartDistance, -kHalfLaneWidth, 0)}},
       // West-bound lane.
       {LaneId("l:e_segment_1"),
        kApproachLength,
-       {GeoPosition(kEntryDistance, kHalfLaneWidth, 0), GeoPosition(kMidDistance, kHalfLaneWidth, 0),
-        GeoPosition(kStartDistance, kHalfLaneWidth, 0)}},
+       {InertialPosition(kEntryDistance, kHalfLaneWidth, 0), InertialPosition(kMidDistance, kHalfLaneWidth, 0),
+        InertialPosition(kStartDistance, kHalfLaneWidth, 0)}},
 
       // Segment north of intersection.
       // North-bound lane.
       {LaneId("l:n_segment_0"),
        kApproachLength,
-       {GeoPosition(kHalfLaneWidth, kEntryDistance, 0), GeoPosition(kHalfLaneWidth, kMidDistance, 0),
-        GeoPosition(kHalfLaneWidth, kStartDistance, 0)}},
+       {InertialPosition(kHalfLaneWidth, kEntryDistance, 0), InertialPosition(kHalfLaneWidth, kMidDistance, 0),
+        InertialPosition(kHalfLaneWidth, kStartDistance, 0)}},
       // South-bound lane.
       {LaneId("l:n_segment_1"),
        kApproachLength,
-       {GeoPosition(-kHalfLaneWidth, kEntryDistance, 0), GeoPosition(-kHalfLaneWidth, kMidDistance, 0),
-        GeoPosition(-kHalfLaneWidth, kStartDistance, 0)}},
+       {InertialPosition(-kHalfLaneWidth, kEntryDistance, 0), InertialPosition(-kHalfLaneWidth, kMidDistance, 0),
+        InertialPosition(-kHalfLaneWidth, kStartDistance, 0)}},
 
       // Segment south of intersection.
       // North-bound lane.
       {LaneId("l:s_segment_0"),
        kApproachLength,
-       {GeoPosition(kHalfLaneWidth, -kEntryDistance, 0), GeoPosition(kHalfLaneWidth, -kMidDistance, 0),
-        GeoPosition(kHalfLaneWidth, -kStartDistance, 0)}},
+       {InertialPosition(kHalfLaneWidth, -kEntryDistance, 0), InertialPosition(kHalfLaneWidth, -kMidDistance, 0),
+        InertialPosition(kHalfLaneWidth, -kStartDistance, 0)}},
       // South-bound lane.
       {LaneId("l:s_segment_1"),
        kApproachLength,
-       {GeoPosition(-kHalfLaneWidth, -kEntryDistance, 0), GeoPosition(-kHalfLaneWidth, -kMidDistance, 0),
-        GeoPosition(-kHalfLaneWidth, -kStartDistance, 0)}},
+       {InertialPosition(-kHalfLaneWidth, -kEntryDistance, 0), InertialPosition(-kHalfLaneWidth, -kMidDistance, 0),
+        InertialPosition(-kHalfLaneWidth, -kStartDistance, 0)}},
 
       // East/West segment inside the intersection.
       // East-bound lane.
       {LaneId("l:ew_intersection_segment_0"),
        kIntersectionWidth,
-       {GeoPosition(0, -kHalfLaneWidth, 0), GeoPosition(8, -kHalfLaneWidth, 0), GeoPosition(-2.33, -2.33, 0),
-        GeoPosition(2.33, -2.33, 0)}},
+       {InertialPosition(0, -kHalfLaneWidth, 0), InertialPosition(8, -kHalfLaneWidth, 0),
+        InertialPosition(-2.33, -2.33, 0), InertialPosition(2.33, -2.33, 0)}},
       // West-bound lane.
       {LaneId("l:ew_intersection_segment_1"),
        kIntersectionWidth,
-       {GeoPosition(0, kHalfLaneWidth, 0), GeoPosition(8, kHalfLaneWidth, 0), GeoPosition(2.33, 2.33, 0),
-        GeoPosition(-2.33, 2.33, 0)}},
+       {InertialPosition(0, kHalfLaneWidth, 0), InertialPosition(8, kHalfLaneWidth, 0), InertialPosition(2.33, 2.33, 0),
+        InertialPosition(-2.33, 2.33, 0)}},
 
       // North/South segment inside the intersection.
       // North-bound lane.
       {LaneId("l:ns_intersection_segment_0"),
        kIntersectionWidth,
-       {GeoPosition(kHalfLaneWidth, 0, 0), GeoPosition(kHalfLaneWidth, -8, 0), GeoPosition(2.33, -2.33, 0),
-        GeoPosition(2.33, 2.33, 0)}},
+       {InertialPosition(kHalfLaneWidth, 0, 0), InertialPosition(kHalfLaneWidth, -8, 0),
+        InertialPosition(2.33, -2.33, 0), InertialPosition(2.33, 2.33, 0)}},
       // South-bound lane.
       {LaneId("l:ns_intersection_segment_1"),
        kIntersectionWidth,
-       {GeoPosition(0, -kHalfLaneWidth, 0), GeoPosition(-kHalfLaneWidth, 8, 0), GeoPosition(-2.33, -2.33, 0),
-        GeoPosition(-2.33, 2.33, 0)}},
+       {InertialPosition(0, -kHalfLaneWidth, 0), InertialPosition(-kHalfLaneWidth, 8, 0),
+        InertialPosition(-2.33, -2.33, 0), InertialPosition(-2.33, 2.33, 0)}},
 
       // Right turn lanes.
       {LaneId("l:east_right_turn_segment_0"),
        M_PI_2 * 7.5,
-       {GeoPosition(-kEntryDistance, -kHalfLaneWidth, 0), GeoPosition(-4.8, -4.8, 0),
-        GeoPosition(-kHalfLaneWidth, -kEntryDistance, 0)}},
+       {InertialPosition(-kEntryDistance, -kHalfLaneWidth, 0), InertialPosition(-4.8, -4.8, 0),
+        InertialPosition(-kHalfLaneWidth, -kEntryDistance, 0)}},
       {LaneId("l:west_right_turn_segment_0"),
        M_PI_2 * 7.5,
-       {GeoPosition(kEntryDistance, kHalfLaneWidth, 0), GeoPosition(4.8, 4.8, 0),
-        GeoPosition(kHalfLaneWidth, kEntryDistance, 0)}},
+       {InertialPosition(kEntryDistance, kHalfLaneWidth, 0), InertialPosition(4.8, 4.8, 0),
+        InertialPosition(kHalfLaneWidth, kEntryDistance, 0)}},
       {LaneId("l:north_right_turn_segment_0"),
        M_PI_2 * 7.5,
-       {GeoPosition(kHalfLaneWidth, -kEntryDistance, 0), GeoPosition(4.8, -4.8, 0),
-        GeoPosition(kEntryDistance, -kHalfLaneWidth, 0)}},
+       {InertialPosition(kHalfLaneWidth, -kEntryDistance, 0), InertialPosition(4.8, -4.8, 0),
+        InertialPosition(kEntryDistance, -kHalfLaneWidth, 0)}},
       {LaneId("l:south_right_turn_segment_0"),
        M_PI_2 * 7.5,
-       {GeoPosition(-kHalfLaneWidth, kEntryDistance, 0), GeoPosition(-4.8, 4.8, 0),
-        GeoPosition(-kEntryDistance, kHalfLaneWidth, 0)}},
+       {InertialPosition(-kHalfLaneWidth, kEntryDistance, 0), InertialPosition(-4.8, 4.8, 0),
+        InertialPosition(-kEntryDistance, kHalfLaneWidth, 0)}},
 
       // Left turn lanes.
       {LaneId("l:east_left_turn_segment_0"),
        M_PI_2 * 11.25,
-       {GeoPosition(-kEntryDistance, -kHalfLaneWidth, 0), GeoPosition(-1.66, 0.64, 0),
-        GeoPosition(kHalfLaneWidth, kEntryDistance, 0)}},
+       {InertialPosition(-kEntryDistance, -kHalfLaneWidth, 0), InertialPosition(-1.66, 0.64, 0),
+        InertialPosition(kHalfLaneWidth, kEntryDistance, 0)}},
       {LaneId("l:west_left_turn_segment_0"),
        M_PI_2 * 11.25,
-       {GeoPosition(kEntryDistance, kHalfLaneWidth, 0), GeoPosition(1.66, -0.64, 0),
-        GeoPosition(-kHalfLaneWidth, -kEntryDistance, 0)}},
+       {InertialPosition(kEntryDistance, kHalfLaneWidth, 0), InertialPosition(1.66, -0.64, 0),
+        InertialPosition(-kHalfLaneWidth, -kEntryDistance, 0)}},
       {LaneId("l:north_left_turn_segment_0"),
        M_PI_2 * 11.25,
-       {GeoPosition(kHalfLaneWidth, -kEntryDistance, 0), GeoPosition(0.64, -1.66, 0),
-        GeoPosition(-kEntryDistance, kHalfLaneWidth, 0)}},
+       {InertialPosition(kHalfLaneWidth, -kEntryDistance, 0), InertialPosition(0.64, -1.66, 0),
+        InertialPosition(-kEntryDistance, kHalfLaneWidth, 0)}},
       {LaneId("l:south_left_turn_segment_0"),
        M_PI_2 * 11.25,
-       {GeoPosition(-kHalfLaneWidth, kEntryDistance, 0), GeoPosition(-0.64, 1.66, 0),
-        GeoPosition(kEntryDistance, -kHalfLaneWidth, 0)}},
+       {InertialPosition(-kHalfLaneWidth, kEntryDistance, 0), InertialPosition(-0.64, 1.66, 0),
+        InertialPosition(kEntryDistance, -kHalfLaneWidth, 0)}},
   };
   for (const auto& test_case : test_cases) {
     const Lane* lane = dut_->ById().GetLane(test_case.id);
     EXPECT_NE(lane, nullptr);
     EXPECT_NEAR(lane->length(), test_case.length, dut_->linear_tolerance());
-    for (const auto& geo_position : test_case.geo_positions) {
-      const LanePositionResult result = lane->ToLanePosition(geo_position);
+    for (const auto& inertial_position : test_case.inertial_positions) {
+      const LanePositionResult result = lane->ToLanePosition(inertial_position);
       EXPECT_NEAR(result.distance, 0, dut_->linear_tolerance());
       const RBounds lane_bounds = lane->lane_bounds(result.lane_position.s());
       EXPECT_TRUE(lane_bounds.min() <= result.lane_position.r());

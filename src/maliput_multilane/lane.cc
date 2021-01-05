@@ -35,7 +35,7 @@ std::optional<api::LaneEnd> Lane::DoGetDefaultBranch(api::LaneEnd::Which which_e
   return GetBranchPoint(which_end)->GetDefaultBranch({this, which_end});
 }
 
-api::GeoPosition Lane::DoToGeoPosition(const api::LanePosition& lane_pos) const {
+api::InertialPosition Lane::DoToInertialPosition(const api::LanePosition& lane_pos) const {
   // Recover parameter p from arc-length position s.
   const double p = p_from_s_at_r0_(lane_pos.s());
   const drake::Vector3<double> xyz = road_curve_->W_of_prh(p, lane_pos.r() + r0_, lane_pos.h());
@@ -69,7 +69,7 @@ api::LanePosition Lane::DoEvalMotionDerivatives(const api::LanePosition& positio
   return api::LanePosition(ds_dsigma * velocity.sigma_v, velocity.rho_v, velocity.eta_v);
 }
 
-api::LanePositionResult Lane::DoToLanePosition(const api::GeoPosition& geo_position) const {
+api::LanePositionResult Lane::DoToLanePosition(const api::InertialPosition& inertial_position) const {
   // Computes the lateral extents of the surface in terms of the definition of
   // the reference curve. It implies a translation of the segment bounds
   // center by the lane by r0 distance.
@@ -78,9 +78,10 @@ api::LanePositionResult Lane::DoToLanePosition(const api::GeoPosition& geo_posit
   // Lane position is over the segment's road curve frame, so a change is
   // needed. That implies getting the path length s from p and translating the r
   // coordinate because of the offset.
-  const math::Vector3 geo_position_xyz{geo_position.xyz()};
-  const drake::Vector3<double> lane_position_in_segment_curve_frame_drake = road_curve_->ToCurveFrame(
-      {geo_position_xyz.x(), geo_position_xyz.y(), geo_position_xyz.z()}, r_min, r_max, elevation_bounds_);
+  const math::Vector3 inertial_position_xyz{inertial_position.xyz()};
+  const drake::Vector3<double> lane_position_in_segment_curve_frame_drake =
+      road_curve_->ToCurveFrame({inertial_position_xyz.x(), inertial_position_xyz.y(), inertial_position_xyz.z()},
+                                r_min, r_max, elevation_bounds_);
   const math::Vector3 lane_position_in_segment_curve_frame{lane_position_in_segment_curve_frame_drake.x(),
                                                            lane_position_in_segment_curve_frame_drake.y(),
                                                            lane_position_in_segment_curve_frame_drake.z()};
@@ -88,9 +89,10 @@ api::LanePositionResult Lane::DoToLanePosition(const api::GeoPosition& geo_posit
   const api::LanePosition lane_position =
       api::LanePosition(s, lane_position_in_segment_curve_frame[1] - r0_, lane_position_in_segment_curve_frame[2]);
 
-  const api::GeoPosition nearest_position = ToGeoPosition(lane_position);
+  const api::InertialPosition nearest_position = ToInertialPosition(lane_position);
 
-  return api::LanePositionResult{lane_position, nearest_position, (nearest_position.xyz() - geo_position.xyz()).norm()};
+  return api::LanePositionResult{lane_position, nearest_position,
+                                 (nearest_position.xyz() - inertial_position.xyz()).norm()};
 }
 
 }  // namespace multilane

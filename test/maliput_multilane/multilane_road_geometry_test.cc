@@ -99,23 +99,24 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
   std::unique_ptr<const api::RoadGeometry> rg = rb->Build(api::RoadGeometryId{"multi_lane_with_branches"});
 
   // Place a point at the middle of lane1.
-  api::GeoPosition geo_pos{kArcRadius, -kArcRadius - kLength / 2., 0.};
+  api::InertialPosition inertial_pos{kArcRadius, -kArcRadius - kLength / 2., 0.};
 
-  api::GeoPosition nearest_position{};
-  api::RoadPositionResult result = rg->ToRoadPosition(geo_pos);
+  api::InertialPosition nearest_position{};
+  api::RoadPositionResult result = rg->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point centered within lane1 (straight segment).
   EXPECT_TRUE(api::test::IsLanePositionClose(
       result.road_position.pos, api::LanePosition(kLength / 2. /* s */, 0. /* r */, 0. /* h */), kVeryExact));
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane1_0"));
   EXPECT_EQ(result.distance, 0.);
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position,
-                                            api::GeoPosition(geo_pos.x(), geo_pos.y(), geo_pos.z()), kVeryExact));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition(inertial_pos.x(), inertial_pos.y(), inertial_pos.z()),
+      kVeryExact));
 
   // Place a point halfway to the end of lane1, just to the outside (left side)
   // of the lane bounds.
-  geo_pos = api::GeoPosition(kArcRadius + 2. * kWidth, -kArcRadius - kLength / 2., 0.);
-  result = rg->ToRoadPosition(geo_pos);
+  inertial_pos = api::InertialPosition(kArcRadius + 2. * kWidth, -kArcRadius - kLength / 2., 0.);
+  result = rg->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point just outside (to the left) of lane1, by an
   // amount kWidth.
@@ -123,66 +124,70 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
       result.road_position.pos, api::LanePosition(kLength / 2. /* s */, kWidth /* r */, 0. /* h */), kVeryExact));
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane1_0"));
   EXPECT_EQ(result.distance, kWidth);
-  EXPECT_TRUE(api::test::IsGeoPositionClose(
-      result.nearest_position, api::GeoPosition(geo_pos.x() - kWidth, geo_pos.y(), geo_pos.z()), kVeryExact));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition(inertial_pos.x() - kWidth, inertial_pos.y(), inertial_pos.z()),
+      kVeryExact));
 
   // Place a point at the middle of lane3a (straight segment).
-  geo_pos = api::GeoPosition(2. * kArcRadius + kLength / 2., -2. * kArcRadius - kLength, 0.);
-  result = rg->ToRoadPosition(geo_pos);
+  inertial_pos = api::InertialPosition(2. * kArcRadius + kLength / 2., -2. * kArcRadius - kLength, 0.);
+  result = rg->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point centered within lane3a.
   EXPECT_TRUE(api::test::IsLanePositionClose(
       result.road_position.pos, api::LanePosition(kLength / 2. /* s */, 0. /* r */, 0. /* h */), kVeryExact));
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane3a_0"));
   EXPECT_EQ(result.distance, 0.);
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position,
-                                            api::GeoPosition(geo_pos.x(), geo_pos.y(), geo_pos.z()), kVeryExact));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition(inertial_pos.x(), inertial_pos.y(), inertial_pos.z()),
+      kVeryExact));
 
   // Place a point high above the middle of lane3a (straight segment).
-  geo_pos = api::GeoPosition(2. * kArcRadius + kLength / 2., -2. * kArcRadius - kLength, 50.);
-  result = rg->ToRoadPosition(geo_pos);
+  inertial_pos = api::InertialPosition(2. * kArcRadius + kLength / 2., -2. * kArcRadius - kLength, 50.);
+  result = rg->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point centered above lane3a.
   EXPECT_TRUE(api::test::IsLanePositionClose(
       result.road_position.pos, api::LanePosition(kLength / 2. /* s */, 0. /* r */, kHeight /* h */), kVeryExact));
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane3a_0"));
   EXPECT_EQ(result.distance, 50. - kHeight);
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position,
-                                            api::GeoPosition(geo_pos.x(), geo_pos.y(), kHeight), kVeryExact));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition(inertial_pos.x(), inertial_pos.y(), kHeight), kVeryExact));
 
   // Place a point at the end of lane3b (arc segment).
-  geo_pos = api::GeoPosition(2. * kArcRadius + kLength, -kArcRadius - kLength, 0.);
-  result = rg->ToRoadPosition(geo_pos);
+  inertial_pos = api::InertialPosition(2. * kArcRadius + kLength, -kArcRadius - kLength, 0.);
+  result = rg->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point at the end of lane3b.
   EXPECT_TRUE(api::test::IsLanePositionClose(
       result.road_position.pos, api::LanePosition(kArcRadius * M_PI / 2. /* s */, 0. /* r */, 0. /* h */), kVeryExact));
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane3b_0"));
   EXPECT_EQ(result.distance, 0.);
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position,
-                                            api::GeoPosition(geo_pos.x(), geo_pos.y(), geo_pos.z()), kVeryExact));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition(inertial_pos.x(), inertial_pos.y(), inertial_pos.z()),
+      kVeryExact));
 
   // Supply a hint with a position at the start of lane3c to try and determine
   // the RoadPosition for a point at the end of lane3b.
   api::RoadPosition hint{GetLaneByJunctionId(*rg, "j:lane3c"), {0., 0., 0.}};
-  result = rg->ToRoadPosition(geo_pos, hint);
+  result = rg->ToRoadPosition(inertial_pos, hint);
 
   // Expect to locate the point outside of lanes lane3c (and ongoing adjacent
   // lanes), since lane3b is not ongoing from lane3c.
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane3c_0"));
-  EXPECT_GT(result.distance, 0.);  // geo_pos is not within this lane.
+  EXPECT_GT(result.distance, 0.);  // inertial_pos is not within this lane.
 
   // Supply a hint with a position at the start of lane2 to try and determine
   // the RoadPosition for a point at the end of lane3b.
   hint = api::RoadPosition{GetLaneByJunctionId(*rg, "j:lane2"), {0., 0., 0.}};
-  result = rg->ToRoadPosition(geo_pos, hint);
+  result = rg->ToRoadPosition(inertial_pos, hint);
 
   // Expect to traverse to lane3b (an ongoing lane) and then locate the point
   // within lane lane3b.
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane3b_0"));
-  EXPECT_EQ(result.distance, 0.);  // geo_pos is inside lane3b.
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position,
-                                            api::GeoPosition(geo_pos.x(), geo_pos.y(), geo_pos.z()), kVeryExact));
+  EXPECT_EQ(result.distance, 0.);  // inertial_pos is inside lane3b.
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition(inertial_pos.x(), inertial_pos.y(), inertial_pos.z()),
+      kVeryExact));
 }
 
 GTEST_TEST(MultilaneLanesTest, HintWithDisconnectedLanes) {
@@ -220,12 +225,12 @@ GTEST_TEST(MultilaneLanesTest, HintWithDisconnectedLanes) {
   std::unique_ptr<const api::RoadGeometry> rg = rb->Build(api::RoadGeometryId{"disconnected_lanes"});
 
   // Place a point at the middle of lane0.
-  api::GeoPosition geo_pos{50. * std::sqrt(2.) / 2., -50. * std::sqrt(2.) / 2., 0.};
+  api::InertialPosition inertial_pos{50. * std::sqrt(2.) / 2., -50. * std::sqrt(2.) / 2., 0.};
 
   // Supply a hint with a position at the start of lane1.
   const api::RoadPosition hint{GetLaneByJunctionId(*rg, "j:lane1"), {0., 0., 0.}};
   api::RoadPositionResult result;
-  EXPECT_NO_THROW(result = rg->ToRoadPosition(geo_pos, hint));
+  EXPECT_NO_THROW(result = rg->ToRoadPosition(inertial_pos, hint));
   // The search is confined to lane1.
   EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane1_0"));
   // lane1 does not contain the point.
@@ -254,7 +259,7 @@ GTEST_TEST(MultilaneLanesTest, HintWithDisconnectedLanes) {
 //        ------------------------------------
 //                          a
 //
-// Letters, such as `a`, `b`, etc. are the api::GeoPositions to test.
+// Letters, such as `a`, `b`, etc. are the api::InertialPositions to test.
 GTEST_TEST(MultilaneLanesTest, MultipleLineLaneSegmentWithoutHint) {
   const HBounds kElevationBounds{0., kHeight};
   const double kLinearTolerance{kVeryExact};
@@ -281,34 +286,42 @@ GTEST_TEST(MultilaneLanesTest, MultipleLineLaneSegmentWithoutHint) {
                    EndReference().z_at(kFlatZ, Direction::kForward));
   std::unique_ptr<const api::RoadGeometry> rg = builder->Build(api::RoadGeometryId{"multi-lane-line-segment"});
 
-  // Prepares the truth table to match different api::GeoPositions into
+  // Prepares the truth table to match different api::InertialPositions into
   // api::RoadPositions.
   const api::Lane* kFirstLane = GetLaneByJunctionId(*rg, "j:s0", 0, 0);
   const api::Lane* kSecondLane = GetLaneByJunctionId(*rg, "j:s0", 0, 1);
   const api::Lane* kThirdLane = GetLaneByJunctionId(*rg, "j:s0", 0, 2);
 
   // <Geo point - Expected road pos - Nearest pos - Hint - Distance >
-  const std::vector<std::tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>>
+  const std::vector<
+      std::tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition, double>>
       truth_vector{
-          std::make_tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>(  // a
+          std::make_tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition,
+                          double>(  // a
               {kHalfLength, -kLaneWidth, kZeroZ}, {kFirstLane, {kHalfLength, -0.75 * kLaneWidth, kZeroZ}},
               {kHalfLength, -0.75 * kLaneWidth, kZeroZ}, {kFirstLane, {}}, 0.25 * kLaneWidth),
-          std::make_tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>(  // b
+          std::make_tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition,
+                          double>(  // b
               {kHalfLength, -0.625 * kLaneWidth, kZeroZ}, {kFirstLane, {kHalfLength, -0.625 * kLaneWidth, kZeroZ}},
               {kHalfLength, -0.625 * kLaneWidth, kZeroZ}, {kFirstLane, {}}, 0.),
-          std::make_tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>(  // c
+          std::make_tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition,
+                          double>(  // c
               {kHalfLength, 0.5 * kLaneWidth, kZeroZ}, {kSecondLane, {kHalfLength, -0.5 * kLaneWidth, kZeroZ}},
               {kHalfLength, 0.5 * kLaneWidth, kZeroZ}, {kSecondLane, {}}, 0.),
-          std::make_tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>(  // d
+          std::make_tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition,
+                          double>(  // d
               {kHalfLength, 0.775 * kLaneWidth, kZeroZ}, {kSecondLane, {kHalfLength, -0.225 * kLaneWidth, kZeroZ}},
               {kHalfLength, 0.775 * kLaneWidth, kZeroZ}, {kSecondLane, {}}, 0.),
-          std::make_tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>(  // e
+          std::make_tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition,
+                          double>(  // e
               {kHalfLength, 2.075 * kLaneWidth, kZeroZ}, {kThirdLane, {kHalfLength, 0.075 * kLaneWidth, kZeroZ}},
               {kHalfLength, 2.075 * kLaneWidth, kZeroZ}, {kThirdLane, {}}, 0.),
-          std::make_tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>(  // f
+          std::make_tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition,
+                          double>(  // f
               {kHalfLength, 2.625 * kLaneWidth, kZeroZ}, {kThirdLane, {kHalfLength, 0.625 * kLaneWidth, kZeroZ}},
               {kHalfLength, 2.625 * kLaneWidth, kZeroZ}, {kThirdLane, {}}, 0.),
-          std::make_tuple<api::GeoPosition, api::RoadPosition, api::GeoPosition, api::RoadPosition, double>(  // g
+          std::make_tuple<api::InertialPosition, api::RoadPosition, api::InertialPosition, api::RoadPosition,
+                          double>(  // g
               {kHalfLength, 3. * kLaneWidth, kZeroZ}, {kThirdLane, {kHalfLength, 0.75 * kLaneWidth, kZeroZ}},
               {kHalfLength, 2.75 * kLaneWidth, kZeroZ}, {kThirdLane, {}}, 0.25 * kLaneWidth),
       };
@@ -320,7 +333,8 @@ GTEST_TEST(MultilaneLanesTest, MultipleLineLaneSegmentWithoutHint) {
     EXPECT_EQ(result.road_position.lane->id(), std::get<1>(truth_value).lane->id());
     EXPECT_TRUE(
         api::test::IsLanePositionClose(result.road_position.pos, std::get<1>(truth_value).pos, kLinearTolerance));
-    EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position, std::get<2>(truth_value), kLinearTolerance));
+    EXPECT_TRUE(
+        api::test::IsInertialPositionClose(result.nearest_position, std::get<2>(truth_value), kLinearTolerance));
     EXPECT_NEAR(result.distance, std::get<4>(truth_value), kLinearTolerance);
   }
 
@@ -330,7 +344,8 @@ GTEST_TEST(MultilaneLanesTest, MultipleLineLaneSegmentWithoutHint) {
     EXPECT_EQ(result.road_position.lane->id(), std::get<1>(truth_value).lane->id());
     EXPECT_TRUE(
         api::test::IsLanePositionClose(result.road_position.pos, std::get<1>(truth_value).pos, kLinearTolerance));
-    EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position, std::get<2>(truth_value), kLinearTolerance));
+    EXPECT_TRUE(
+        api::test::IsInertialPositionClose(result.nearest_position, std::get<2>(truth_value), kLinearTolerance));
     EXPECT_NEAR(result.distance, std::get<4>(truth_value), kLinearTolerance);
   }
 }
@@ -352,7 +367,7 @@ GTEST_TEST(MultilaneLanesTest, MultipleLineLaneSegmentWithoutHint) {
 //
 // </pre>
 //
-// `a`, `b` and `c` are the GeoPositions to test.
+// `a`, `b` and `c` are the InertialPositions to test.
 GTEST_TEST(MultilaneLanesTest, OverlappingLaneBounds) {
   const HBounds kElevationBounds{0., kHeight};
   const double kLinearTolerance{kVeryExact};   // meters.
@@ -384,32 +399,32 @@ GTEST_TEST(MultilaneLanesTest, OverlappingLaneBounds) {
 
   std::unique_ptr<const api::RoadGeometry> rg = builder->Build(api::RoadGeometryId{"multi-lane-line-segment"});
 
-  // Prepares the truth table to match different api::GeoPositions into
+  // Prepares the truth table to match different api::InertialPositions into
   // api::RoadPositions.
   const api::Lane* line_lane = GetLaneByJunctionId(*rg, "j:line-segment", 0, 0);
   const api::Lane* arc_lane = GetLaneByJunctionId(*rg, "j:arc-segment", 0, 0);
 
   api::RoadPositionResult result{};
 
-  // Checks the origin, where both lanes start from the same GeoPosition and
+  // Checks the origin, where both lanes start from the same InertialPosition and
   // there is no explicit preference for one or the other lane in maliput API
   // as both have the same `r` coordinate and no hint is supplied.
-  const api::GeoPosition kAPoint(0., 0., 0.);
+  const api::InertialPosition kAPoint(0., 0., 0.);
   EXPECT_NO_THROW(result = rg->ToRoadPosition(kAPoint));
   EXPECT_NE(result.road_position.lane, nullptr);
   EXPECT_TRUE(
       api::test::IsLanePositionClose(result.road_position.pos, api::LanePosition(0., 0., 0.), kLinearTolerance));
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position, kAPoint, kLinearTolerance));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, kAPoint, kLinearTolerance));
   EXPECT_NEAR(result.distance, 0., kLinearTolerance);
 
-  // Using the same GeoPosition, but with a line-hint, we should get the
+  // Using the same InertialPosition, but with a line-hint, we should get the
   // result on the line-segment.
   const api::RoadPosition kStartLineLane{line_lane, api::LanePosition(0., 0., 0.)};
   EXPECT_NO_THROW(result = rg->ToRoadPosition(kAPoint, kStartLineLane));
   EXPECT_EQ(result.road_position.lane->id(), line_lane->id());
   EXPECT_TRUE(
       api::test::IsLanePositionClose(result.road_position.pos, api::LanePosition(0., 0., 0.), kLinearTolerance));
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position, kAPoint, kLinearTolerance));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, kAPoint, kLinearTolerance));
   EXPECT_NEAR(result.distance, 0., kLinearTolerance);
 
   // Same as before, but with a hint on the arc-segment.
@@ -418,10 +433,10 @@ GTEST_TEST(MultilaneLanesTest, OverlappingLaneBounds) {
   EXPECT_EQ(result.road_position.lane->id(), arc_lane->id());
   EXPECT_TRUE(
       api::test::IsLanePositionClose(result.road_position.pos, api::LanePosition(0., 0., 0.), kLinearTolerance));
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position, kAPoint, kLinearTolerance));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, kAPoint, kLinearTolerance));
   EXPECT_NEAR(result.distance, 0., kLinearTolerance);
 
-  // Tests a GeoPosition in between line and arc lane curves. It is closer to
+  // Tests a InertialPosition in between line and arc lane curves. It is closer to
   // the line segment (smaller `r` coordinate) but within the lane bounds of
   // both road lanes.
   // The following constants explain how to locate the point in space. An
@@ -429,27 +444,27 @@ GTEST_TEST(MultilaneLanesTest, OverlappingLaneBounds) {
   // as an `x` coordinate. The rest of the variables are derived from them.
   const double kX{8.68};
   const double kROffset{0.3};
-  const api::GeoPosition kBPoint(kX, kROffset, 0.);
+  const api::InertialPosition kBPoint(kX, kROffset, 0.);
   EXPECT_NO_THROW(result = rg->ToRoadPosition(kBPoint));
   EXPECT_EQ(result.road_position.lane->id(), line_lane->id());
   EXPECT_TRUE(
       api::test::IsLanePositionClose(result.road_position.pos, api::LanePosition(kX, kROffset, 0.), kLinearTolerance));
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position, kBPoint, kLinearTolerance));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, kBPoint, kLinearTolerance));
   EXPECT_NEAR(result.distance, 0., kLinearTolerance);
 
-  // Tests a GeoPosition in between line and arc lane curves. It is closer to
+  // Tests a InertialPosition in between line and arc lane curves. It is closer to
   // the arc segment (smaller `r` coordinate) but within the lane bounds of
   // both road lanes.
   // Using previous constants, another point is derived but closer to the
   // arc-centerline.
   const double kCTheta{std::asin(kX / (kRadius + kROffset))};
   const double kCY{kRadius - (kRadius + kROffset) * std::cos(kCTheta)};
-  const api::GeoPosition kCPoint(kX, kCY, 0.);
+  const api::InertialPosition kCPoint(kX, kCY, 0.);
   EXPECT_NO_THROW(result = rg->ToRoadPosition(kCPoint));
   EXPECT_EQ(result.road_position.lane->id(), arc_lane->id());
   EXPECT_TRUE(api::test::IsLanePositionClose(result.road_position.pos,
                                              api::LanePosition(kRadius * kCTheta, -kROffset, 0.), kLinearTolerance));
-  EXPECT_TRUE(api::test::IsGeoPositionClose(result.nearest_position, kCPoint, kLinearTolerance));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, kCPoint, kLinearTolerance));
   EXPECT_NEAR(result.distance, 0., kLinearTolerance);
 }
 

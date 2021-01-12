@@ -15,6 +15,7 @@ set(MALIPUT_MULTILANE_SOURCES
   multilane_onramp_merge.cc
   road_curve.cc
   road_geometry.cc
+  road_network_builder.cc
   segment.cc)
 
 add_library(maliput_multilane ${MALIPUT_MULTILANE_SOURCES})
@@ -39,6 +40,7 @@ ament_target_dependencies(maliput_multilane
 target_link_libraries(maliput_multilane
   drake::drake
   maliput::api
+  maliput::base
   maliput::common
   maliput::math
   yaml-cpp

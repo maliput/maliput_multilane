@@ -9,17 +9,19 @@ namespace multilane {
 namespace plugin {
 namespace {
 
+// Return a multilane::RoadNetworkConfiguration object out of a map of strings.
+// @param parameters  A dictionary of properties to fill in a multilane::RoadNetworkConfiguration struct.
+//                    Keys are the names of attributes in multilane::RoadNetworkConfiguration.
+// @returns A multilane::RoadNetworkConfiguration.
 maliput::multilane::RoadNetworkConfiguration GetPropertiesFromStringMap(
     const std::map<std::string, std::string>& parameters) {
-  std::string yaml_file;
   auto it = parameters.find("yaml_file");
-  if (it != parameters.end()) {
-    yaml_file = it->second;
-  }
+  const std::string yaml_file = it != parameters.end() ? it->second : "";
   return {yaml_file};
 }
 
-class RoadNetwork : public maliput::plugin::RoadNetworkLoader {
+// Implementation of a maliput::plugin::RoadNetworkLoader using multilane backend.
+class RoadNetworkLoader : public maliput::plugin::RoadNetworkLoader {
  public:
   std::unique_ptr<const maliput::api::RoadNetwork> operator()(
       const std::map<std::string, std::string>& properties) const override {
@@ -29,7 +31,7 @@ class RoadNetwork : public maliput::plugin::RoadNetworkLoader {
 
 }  // namespace
 
-REGISTER_ROAD_NETWORK_LOADER_PLUGIN("maliput_multilane", RoadNetwork);
+REGISTER_ROAD_NETWORK_LOADER_PLUGIN("maliput_multilane", RoadNetworkLoader);
 
 }  // namespace plugin
 }  // namespace multilane

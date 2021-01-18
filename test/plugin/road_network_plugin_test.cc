@@ -32,7 +32,7 @@ GTEST_TEST(RoadNetworkLoader, VerifyRoadNetworkPlugin) {
   plugin::MaliputPluginManager manager{};
   plugin::MaliputPlugin const* rn_plugin{nullptr};
   EXPECT_NO_THROW(rn_plugin = manager.GetPlugin(kMultilanePluginId));
-  EXPECT_NE(nullptr, rn_plugin);
+  ASSERT_NE(nullptr, rn_plugin);
 
   // Check multilane plugin is obtained.
   EXPECT_EQ(kMultilanePluginId.string(), rn_plugin->GetId());
@@ -40,14 +40,14 @@ GTEST_TEST(RoadNetworkLoader, VerifyRoadNetworkPlugin) {
   std::unique_ptr<maliput::plugin::RoadNetworkLoader> rn_loader{nullptr};
   EXPECT_NO_THROW(rn_loader = rn_plugin->ExecuteSymbol<std::unique_ptr<plugin::RoadNetworkLoader>>(
                       plugin::RoadNetworkLoader::GetEntryPoint()));
-  EXPECT_NE(nullptr, rn_loader);
+  ASSERT_NE(nullptr, rn_loader);
 
   // Check multilane RoadNetwork is constructible.
   std::unique_ptr<const maliput::api::RoadNetwork> rn{nullptr};
   EXPECT_NO_THROW(rn = (*rn_loader)(rg_multilane_properties));
-  EXPECT_NE(nullptr, rn);
+  ASSERT_NE(nullptr, rn);
   auto multilane_rg = dynamic_cast<const RoadGeometry*>(rn->road_geometry());
-  EXPECT_NE(nullptr, multilane_rg);
+  ASSERT_NE(nullptr, multilane_rg);
 }
 
 }  // namespace

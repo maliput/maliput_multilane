@@ -35,11 +35,13 @@ GTEST_TEST(RoadNetworkLoader, VerifyRoadNetworkPlugin) {
   ASSERT_NE(nullptr, rn_plugin);
 
   // Check multilane plugin is obtained.
-  EXPECT_EQ(kMultilanePluginId.string(), rn_plugin->GetId());
-  EXPECT_EQ(plugin::MaliputPluginType::kRoadNetworkLoader, rn_plugin->GetType());
   std::unique_ptr<maliput::plugin::RoadNetworkLoader> rn_loader{nullptr};
-  EXPECT_NO_THROW(rn_loader = rn_plugin->ExecuteSymbol<std::unique_ptr<plugin::RoadNetworkLoader>>(
-                      plugin::RoadNetworkLoader::GetEntryPoint()));
+  if (rn_plugin != nullptr) {
+    EXPECT_EQ(kMultilanePluginId.string(), rn_plugin->GetId());
+    EXPECT_EQ(plugin::MaliputPluginType::kRoadNetworkLoader, rn_plugin->GetType());
+    EXPECT_NO_THROW(rn_loader = rn_plugin->ExecuteSymbol<std::unique_ptr<plugin::RoadNetworkLoader>>(
+                        plugin::RoadNetworkLoader::GetEntryPoint()));
+  }
   ASSERT_NE(nullptr, rn_loader);
 
   // Check multilane RoadNetwork is constructible.

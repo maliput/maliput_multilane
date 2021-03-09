@@ -78,7 +78,6 @@ class RoadGeometry : public api::RoadGeometry {
   //                          perhaps even derived from the curves directly.
   double do_scale_length() const override { return scale_length_; }
 
-
   // TODO(#45) Allow builder and loaders to set this value.
   math::Vector3 do_inertial_to_backend_frame_translation() const override { return {0., 0., 0.}; }
 

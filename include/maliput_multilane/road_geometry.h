@@ -9,6 +9,7 @@
 #include "maliput/api/lane_data.h"
 #include "maliput/api/road_geometry.h"
 #include "maliput/common/maliput_copyable.h"
+#include "maliput/math/vector.h"
 #include "maliput_multilane/branch_point.h"
 #include "maliput_multilane/junction.h"
 
@@ -76,6 +77,9 @@ class RoadGeometry : public api::RoadGeometry {
   //                          with the geometry of the curves themselves,
   //                          perhaps even derived from the curves directly.
   double do_scale_length() const override { return scale_length_; }
+
+  // TODO(#45) Allow builder and loaders to set this value.
+  math::Vector3 do_inertial_to_backend_frame_translation() const override { return {0., 0., 0.}; }
 
   api::RoadGeometryId id_;
   double linear_tolerance_{};

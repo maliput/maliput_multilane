@@ -1,4 +1,4 @@
-# `maliput-multilane`
+# `maliput_multilane`
 
 
 Maliput_multilane is an implementation of Maliput's API that allows users to

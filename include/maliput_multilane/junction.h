@@ -8,6 +8,7 @@
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/segment.h>
 #include <maliput/common/maliput_copyable.h>
+
 #include "maliput_multilane/road_curve.h"
 #include "maliput_multilane/segment.h"
 

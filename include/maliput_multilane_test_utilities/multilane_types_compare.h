@@ -2,8 +2,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
 #include <maliput/test_utilities/maliput_types_compare.h>
+
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/connection.h"
 

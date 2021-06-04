@@ -10,6 +10,7 @@
 
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_copyable.h>
+
 #include "maliput_multilane/road_curve.h"
 
 namespace maliput {

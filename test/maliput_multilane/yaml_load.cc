@@ -5,11 +5,11 @@
 #include <iostream>
 #include <string>
 
-#include <gflags/gflags.h>
-
 #include <drake/common/text_logging.h>
+#include <gflags/gflags.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/common/logger.h>
+
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/loader.h"
 

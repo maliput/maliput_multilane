@@ -15,11 +15,10 @@
 #include <maliput/base/traffic_light_book_loader.h>
 #include <maliput/common/logger.h>
 #include <maliput/common/maliput_abort.h>
+#include <yaml-cpp/yaml.h>
 
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/loader.h"
-
-#include <yaml-cpp/yaml.h>
 
 namespace maliput {
 namespace multilane {

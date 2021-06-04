@@ -1,10 +1,10 @@
 // Copyright 2021 Toyota Research Institute
 #pragma once
 
+#include <memory>
+
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/road_network.h>
-
-#include <memory>
 
 namespace maliput {
 namespace multilane {

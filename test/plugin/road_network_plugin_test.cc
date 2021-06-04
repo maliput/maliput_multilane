@@ -4,7 +4,6 @@
 #include <string>
 
 #include <gtest/gtest.h>
-
 #include <maliput/common/filesystem.h>
 #include <maliput/plugin/maliput_plugin.h>
 #include <maliput/plugin/maliput_plugin_manager.h>

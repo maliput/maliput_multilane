@@ -3,7 +3,6 @@
 #include <memory>
 
 #include <gtest/gtest.h>
-
 #include <maliput/api/road_geometry.h>
 
 namespace maliput {

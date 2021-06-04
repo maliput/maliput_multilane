@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <memory>
 
-#include "drake/systems/analysis/integrator_base.h"
-#include "drake/systems/analysis/scalar_dense_output.h"
+#include <drake/systems/analysis/integrator_base.h>
+#include <drake/systems/analysis/scalar_dense_output.h>
 
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_throw.h>

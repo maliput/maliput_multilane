@@ -6,10 +6,10 @@
 
 #include <Eigen/Dense>
 
-#include "drake/common/eigen_types.h"
-#include "drake/math/rotation_matrix.h"
-#include "drake/systems/analysis/antiderivative_function.h"
-#include "drake/systems/analysis/scalar_initial_value_problem.h"
+#include <drake/common/eigen_types.h>
+#include <drake/math/rotation_matrix.h>
+#include <drake/systems/analysis/antiderivative_function.h>
+#include <drake/systems/analysis/scalar_initial_value_problem.h>
 #include <maliput/api/lane_data.h>
 #include <maliput/common/maliput_copyable.h>
 #include "maliput_multilane/cubic_polynomial.h"

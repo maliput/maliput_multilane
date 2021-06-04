@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "maliput/common/maliput_abort.h"
+#include <maliput/common/maliput_abort.h>
 
 #include "maliput_multilane/branch_point.h"
 

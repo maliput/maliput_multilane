@@ -5,12 +5,12 @@
 #include <utility>
 #include <vector>
 
-#include "maliput/api/junction.h"
-#include "maliput/api/lane.h"
-#include "maliput/api/road_geometry.h"
-#include "maliput/api/segment.h"
-#include "maliput/common/maliput_abort.h"
-#include "maliput/common/maliput_copyable.h"
+#include <maliput/api/junction.h>
+#include <maliput/api/lane.h>
+#include <maliput/api/road_geometry.h>
+#include <maliput/api/segment.h>
+#include <maliput/common/maliput_abort.h>
+#include <maliput/common/maliput_copyable.h>
 
 #include "maliput_multilane/cubic_polynomial.h"
 #include "maliput_multilane/lane.h"

@@ -7,8 +7,8 @@
 #include <Eigen/Dense>
 #include <gtest/gtest.h>
 
-#include "maliput/common/logger.h"
-#include "maliput/math/vector.h"
+#include <maliput/common/logger.h>
+#include <maliput/math/vector.h>
 
 enum class MatrixCompareType { absolute, relative };
 

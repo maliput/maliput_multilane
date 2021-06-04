@@ -1,6 +1,6 @@
 #include "maliput_multilane/multilane_onramp_merge.h"
 
-#include "maliput/api/road_geometry.h"
+#include <maliput/api/road_geometry.h>
 
 namespace maliput {
 namespace multilane {

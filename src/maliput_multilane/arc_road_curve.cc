@@ -5,7 +5,7 @@
 
 #include "drake/math/saturate.h"
 
-#include "maliput/common/maliput_abort.h"
+#include <maliput/common/maliput_abort.h>
 
 namespace maliput {
 namespace multilane {

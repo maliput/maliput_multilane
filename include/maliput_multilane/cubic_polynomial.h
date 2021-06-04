@@ -3,8 +3,8 @@
 #include <cmath>
 #include <ostream>
 
-#include "maliput/common/maliput_copyable.h"
-#include "maliput/common/maliput_unused.h"
+#include <maliput/common/maliput_copyable.h>
+#include <maliput/common/maliput_unused.h>
 
 namespace maliput {
 namespace multilane {

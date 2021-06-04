@@ -4,12 +4,12 @@
 
 #include <gtest/gtest.h>
 
-#include "maliput/api/branch_point.h"
-#include "maliput/api/junction.h"
-#include "maliput/api/lane.h"
-#include "maliput/api/lane_data.h"
-#include "maliput/api/road_geometry.h"
-#include "maliput/common/filesystem.h"
+#include <maliput/api/branch_point.h>
+#include <maliput/api/junction.h>
+#include <maliput/api/lane.h>
+#include <maliput/api/lane_data.h>
+#include <maliput/api/road_geometry.h>
+#include <maliput/common/filesystem.h>
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/loader.h"
 

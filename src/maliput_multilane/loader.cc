@@ -9,7 +9,7 @@
 #include <tuple>
 #include <utility>
 
-#include "yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
 
 #include <maliput/common/logger.h>
 #include <maliput/common/maliput_abort.h>

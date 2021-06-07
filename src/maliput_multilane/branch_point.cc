@@ -1,6 +1,6 @@
 #include "maliput_multilane/branch_point.h"
 
-#include "maliput/common/maliput_abort.h"
+#include <maliput/common/maliput_abort.h>
 
 namespace maliput {
 namespace multilane {

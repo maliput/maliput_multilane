@@ -1,6 +1,6 @@
 #include "maliput_multilane/connection.h"
 
-#include "drake/common/eigen_types.h"
+#include <drake/common/eigen_types.h>
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/line_road_curve.h"
 

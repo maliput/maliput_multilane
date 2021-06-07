@@ -4,8 +4,8 @@
 
 #include <gtest/gtest.h>
 
-#include "maliput/api/lane_data.h"
-#include "maliput/common/assertion_error.h"
+#include <maliput/api/lane_data.h>
+#include <maliput/common/assertion_error.h>
 #include "maliput_multilane_test_utilities/eigen_matrix_compare.h"
 
 namespace maliput {

@@ -10,7 +10,7 @@
 #include <fmt/format.h>
 #include <gtest/gtest.h>
 
-#include "maliput/math/vector.h"
+#include <maliput/math/vector.h>
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/cubic_polynomial.h"
 #include "maliput_multilane/line_road_curve.h"

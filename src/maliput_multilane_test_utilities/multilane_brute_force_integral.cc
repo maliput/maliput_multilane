@@ -4,7 +4,7 @@
 #include <cmath>
 #include <limits>
 
-#include "maliput/common/maliput_throw.h"
+#include <maliput/common/maliput_throw.h>
 
 namespace maliput {
 namespace multilane {

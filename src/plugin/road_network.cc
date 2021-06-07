@@ -1,7 +1,7 @@
 // Copyright 2021 Toyota Research Institute
 #include <memory>
 
-#include "maliput/plugin/road_network_loader.h"
+#include <maliput/plugin/road_network_loader.h>
 #include "maliput_multilane/road_network_builder.h"
 
 namespace maliput {

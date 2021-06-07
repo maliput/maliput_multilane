@@ -8,9 +8,9 @@
 #include <tuple>
 #include <vector>
 
-#include "maliput/api/lane_data.h"
-#include "maliput/common/maliput_abort.h"
-#include "maliput/common/maliput_copyable.h"
+#include <maliput/api/lane_data.h>
+#include <maliput/common/maliput_abort.h>
+#include <maliput/common/maliput_copyable.h>
 
 #include "maliput_multilane/connection.h"
 #include "maliput_multilane/junction.h"

@@ -3,13 +3,13 @@
 #include <memory>
 #include <optional>
 
-#include "drake/common/eigen_types.h"
+#include <drake/common/eigen_types.h>
 
-#include "maliput/api/branch_point.h"
-#include "maliput/api/lane.h"
-#include "maliput/api/segment.h"
-#include "maliput/common/maliput_abort.h"
-#include "maliput/common/maliput_copyable.h"
+#include <maliput/api/branch_point.h>
+#include <maliput/api/lane.h>
+#include <maliput/api/segment.h>
+#include <maliput/common/maliput_abort.h>
+#include <maliput/common/maliput_copyable.h>
 
 #include "maliput_multilane/cubic_polynomial.h"
 #include "maliput_multilane/road_curve.h"

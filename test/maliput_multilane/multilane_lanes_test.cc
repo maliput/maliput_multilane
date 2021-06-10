@@ -6,8 +6,8 @@
 #include <map>
 
 #include <gtest/gtest.h>
-
 #include <maliput/test_utilities/maliput_types_compare.h>
+
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/junction.h"
 #include "maliput_multilane/line_road_curve.h"

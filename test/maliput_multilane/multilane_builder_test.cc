@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-
 #include <maliput/api/lane_data.h>
 #include <maliput/common/assertion_error.h>
 #include <maliput/common/maliput_copyable.h>
@@ -17,6 +16,7 @@
 #include <maliput/math/vector.h>
 #include <maliput/test_utilities/check_id_indexing.h>
 #include <maliput/test_utilities/maliput_types_compare.h>
+
 #include "maliput_multilane_test_utilities/multilane_types_compare.h"
 
 namespace maliput {

@@ -8,7 +8,6 @@
 #include <utility>
 
 #include <gtest/gtest.h>
-
 #include <maliput/common/maliput_abort.h>
 #include <maliput/test_utilities/maliput_types_compare.h>
 

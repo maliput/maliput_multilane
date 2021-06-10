@@ -12,13 +12,13 @@
 #include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-
 #include <maliput/api/branch_point.h>
 #include <maliput/api/junction.h>
 #include <maliput/api/lane.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/segment.h>
 #include <maliput/test_utilities/maliput_types_compare.h>
+
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/connection.h"
 #include "maliput_multilane_test_utilities/multilane_types_compare.h"

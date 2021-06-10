@@ -4,7 +4,6 @@
 #include <limits>
 
 #include <drake/math/saturate.h>
-
 #include <maliput/common/maliput_abort.h>
 
 namespace maliput {

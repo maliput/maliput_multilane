@@ -9,11 +9,10 @@
 #include <tuple>
 #include <utility>
 
-#include "yaml-cpp/yaml.h"
-
 #include <maliput/common/logger.h>
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_throw.h>
+#include <yaml-cpp/yaml.h>
 
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/connection.h"

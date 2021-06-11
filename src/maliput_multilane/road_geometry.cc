@@ -86,8 +86,10 @@ const api::RoadPositionResult EvaluateRoadPositionResult(const api::InertialPosi
 
 Junction* RoadGeometry::NewJunction(api::JunctionId id) {
   namespace sp = std::placeholders;
+  // clang-format off
   junctions_.push_back(std::make_unique<Junction>(id, this, [this](auto segment) { id_index_.AddSegment(segment); },
                                                   [this](auto lane) { id_index_.AddLane(lane); }));
+  // clang-format on
   Junction* junction = junctions_.back().get();
   id_index_.AddJunction(junction);
   return junction;

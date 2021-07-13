@@ -19,7 +19,8 @@ target_link_libraries(road_network
 target_include_directories(road_network
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    $<INSTALL_INTERFACE:include>
+)
 
 ##############################################################################
 # Export

@@ -20,7 +20,7 @@ target_include_directories(
   test_utilities
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    $<INSTALL_INTERFACE:include>
   PRIVATE
     ${GMOCK_INCLUDE_DIRS}
 )

@@ -30,7 +30,8 @@ set_target_properties(maliput_multilane
 target_include_directories(maliput_multilane
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+    $<INSTALL_INTERFACE:include>
+)
 
 ament_target_dependencies(maliput_multilane
   "maliput"

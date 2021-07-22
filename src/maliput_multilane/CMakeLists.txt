@@ -33,11 +33,6 @@ target_include_directories(maliput_multilane
     $<INSTALL_INTERFACE:include>
 )
 
-ament_target_dependencies(maliput_multilane
-  "maliput"
-  "drake"
-)
-
 target_link_libraries(maliput_multilane
   drake::drake
   maliput::api

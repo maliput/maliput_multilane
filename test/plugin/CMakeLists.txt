@@ -25,10 +25,6 @@ macro(add_dependencies_to_test target)
           ENABLE_EXPORTS ON
       )
 
-      ament_target_dependencies(${target}
-        "maliput"
-      )
-
       target_link_libraries(${target}
           maliput_multilane::maliput_multilane
           maliput::common

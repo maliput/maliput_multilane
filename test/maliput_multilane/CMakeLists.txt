@@ -18,11 +18,6 @@ macro(add_dependencies_to_test target)
           ${PROJECT_SOURCE_DIR}/include
       )
 
-      ament_target_dependencies(${target}
-          "maliput"
-          "drake"
-      )
-
       target_link_libraries(${target}
           drake::drake
           maliput::api

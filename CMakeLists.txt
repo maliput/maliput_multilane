@@ -63,6 +63,7 @@ if(BUILD_DOCS)
   ament_doxygen_generate(doxygen_multilane
     CONFIG_OVERLAY doc/Doxyfile.overlay.in
     DEPENDENCIES maliput
+    TEST_ON_WARNS
   )
 endif()
 

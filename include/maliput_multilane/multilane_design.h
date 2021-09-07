@@ -25,7 +25,8 @@
 ///
 /// Three coordinate frames are involved in the following discussion:
 ///  * @f$(x,y,z)@f$ is a position in the `World`-frame.
-///  * @f$(s,r,h)_{LANE,i}@f$ is a position in the `Lane`-frame of the `Lane` with
+///  * @f$(s,r,h)_{LANE,i}@f$ is a position in the `Lane`-frame (discussed
+///    in section @ref inertial_frame_versus_lane_frame ) of the `Lane` with
 ///    index @f$i@f$.
 ///  * @f$(p,r,h)_{SEG}@f$ is a position in a curvilinear reference frame of
 ///    the `Segment`, analogous to @f$(s,r,h)_{LANE,i}@f$ for a `Lane`.

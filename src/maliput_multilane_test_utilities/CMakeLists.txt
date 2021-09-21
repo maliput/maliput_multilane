@@ -26,11 +26,15 @@ target_include_directories(
 )
 
 target_link_libraries(test_utilities
-  drake::drake
   maliput::api
   maliput::common
   maliput::test_utilities
   maliput::math
+  maliput_drake::analysis
+  maliput_drake::common
+  maliput_drake::framework
+  maliput_drake::math
+  maliput_drake::trajectories
   maliput_multilane
 )
 

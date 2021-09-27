@@ -74,6 +74,79 @@ void ComputeContinuityConstraint(double curvature, EndpointZ* endpointz) {
   MALIPUT_DEMAND(endpointz != nullptr);
   endpointz->get_mutable_theta_dot() = curvature * std::sin(-std::atan(endpointz->z_dot()));
 }
+
+// EndpointFuzzyOrder is an arbitrary strict complete ordering of Endpoints
+// useful for, e.g., std::map.  It provides a comparison operation that
+// treats two Endpoints within `linear_tolerance` of one another as
+// equivalent.
+//
+// This is used to match up the endpoints of Connections, to determine
+// how Connections are linked to one another.  Exact numeric equality
+// would not be robust given the use of floating-point values in Endpoints.
+class EndpointFuzzyOrder {
+ public:
+  MALIPUT_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(EndpointFuzzyOrder)
+
+  // clang-format off
+  explicit EndpointFuzzyOrder(const double linear_tolerance)
+      : lin_tol_(linear_tolerance) {}
+  // clang-format on
+
+  bool operator()(const Endpoint& lhs, const Endpoint& rhs) const {
+    switch (fuzzy_compare(rhs.xy().x(), lhs.xy().x())) {
+      default:
+        break;
+      case -1: {
+        return true;
+      }
+      case 1: {
+        return false;
+      }
+      case 0: {
+        switch (fuzzy_compare(rhs.xy().y(), lhs.xy().y())) {
+          default:
+            break;
+          case -1: {
+            return true;
+          }
+          case 1: {
+            return false;
+          }
+          case 0: {
+            switch (fuzzy_compare(rhs.z().z(), lhs.z().z())) {
+              default:
+                break;
+              case -1: {
+                return true;
+              }
+              case 1: {
+                return false;
+              }
+              case 0: {
+                return false;
+              }
+            }
+          }
+        }
+      }
+    }
+    throw std::domain_error("fuzzy_compare domain error");
+  }
+
+ private:
+  int fuzzy_compare(const double a, const double b) const {
+    if (a < (b - lin_tol_)) {
+      return -1;
+    } else if (a > (b + lin_tol_)) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  double lin_tol_{};
+};
+
 }  // namespace
 
 const Connection* Builder::Connect(const std::string& id, const LaneLayout& lane_layout,
@@ -328,10 +401,8 @@ bool IsLaneContinuousAtBranchPoint(const api::Lane* lane, const api::LaneEnd::Wh
                                                     angular_tolerance));
 }
 
-}  // namespace
-
-BranchPoint* Builder::FindOrCreateBranchPoint(const Endpoint& point, RoadGeometry* road_geometry,
-                                              std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* bp_map) const {
+BranchPoint* FindOrCreateBranchPoint(const Endpoint& point, RoadGeometry* road_geometry,
+                                     std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* bp_map) {
   auto ibp = bp_map->find(point);
   if (ibp != bp_map->end()) {
     return ibp->second;
@@ -344,9 +415,8 @@ BranchPoint* Builder::FindOrCreateBranchPoint(const Endpoint& point, RoadGeometr
   return bp;
 }
 
-void Builder::AttachBranchPoint(const Endpoint& point, Lane* const lane, const api::LaneEnd::Which end,
-                                RoadGeometry* road_geometry,
-                                std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* bp_map) const {
+void AttachBranchPoint(const Endpoint& point, Lane* const lane, const api::LaneEnd::Which end, double angular_tolerance,
+                       RoadGeometry* road_geometry, std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* bp_map) {
   BranchPoint* bp = FindOrCreateBranchPoint(point, road_geometry, bp_map);
   // Tell the lane about its branch-point.
   MALIPUT_DEMAND((end == api::LaneEnd::kStart) || (end == api::LaneEnd::kFinish));
@@ -380,30 +450,33 @@ void Builder::AttachBranchPoint(const Endpoint& point, Lane* const lane, const a
   const math::Vector3 old_direction = DirectionOutFromLane(old_le.lane, old_le.end, kZeroROffset);
   if (direction.dot(old_direction) > 0.) {
     // Assert continuity before attaching the lane.
-    MALIPUT_THROW_UNLESS(IsLaneContinuousAtBranchPoint(lane, end, bp->GetASide(), bp->GetBSide(), angular_tolerance_));
+    MALIPUT_THROW_UNLESS(IsLaneContinuousAtBranchPoint(lane, end, bp->GetASide(), bp->GetBSide(), angular_tolerance));
     bp->AddABranch({lane, end});
   } else {
     // Assert continuity before attaching the lane.
-    MALIPUT_THROW_UNLESS(IsLaneContinuousAtBranchPoint(lane, end, bp->GetBSide(), bp->GetASide(), angular_tolerance_));
+    MALIPUT_THROW_UNLESS(IsLaneContinuousAtBranchPoint(lane, end, bp->GetBSide(), bp->GetASide(), angular_tolerance));
     bp->AddBBranch({lane, end});
   }
 }
 
-std::vector<Lane*> Builder::BuildConnection(const Connection* const conn, Junction* const junction,
-                                            RoadGeometry* const road_geometry,
-                                            std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* const bp_map) const {
+std::vector<Lane*> BuildConnection(const Connection* const conn, Junction* const junction,
+                                   const api::HBounds& elevation_bounds, double angular_tolerance,
+                                   RoadGeometry* const road_geometry,
+                                   std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* const bp_map) {
   Segment* segment = junction->NewSegment(api::SegmentId{std::string("s:") + conn->id()}, conn->CreateRoadCurve(),
-                                          conn->r_min(), conn->r_max(), elevation_bounds_);
+                                          conn->r_min(), conn->r_max(), elevation_bounds);
   std::vector<Lane*> lanes;
   for (int i = 0; i < conn->num_lanes(); i++) {
     Lane* lane = segment->NewLane(api::LaneId{std::string("l:") + conn->id() + std::string("_") + std::to_string(i)},
                                   conn->lane_offset(i), {-conn->lane_width() / 2., conn->lane_width() / 2.});
-    AttachBranchPoint(conn->LaneStart(i), lane, api::LaneEnd::kStart, road_geometry, bp_map);
-    AttachBranchPoint(conn->LaneEnd(i), lane, api::LaneEnd::kFinish, road_geometry, bp_map);
+    AttachBranchPoint(conn->LaneStart(i), lane, api::LaneEnd::kStart, angular_tolerance, road_geometry, bp_map);
+    AttachBranchPoint(conn->LaneEnd(i), lane, api::LaneEnd::kFinish, angular_tolerance, road_geometry, bp_map);
     lanes.push_back(lane);
   }
   return lanes;
 }
+
+}  // namespace
 
 std::unique_ptr<const api::RoadGeometry> Builder::Build(const api::RoadGeometryId& id) const {
   auto road_geometry = std::make_unique<RoadGeometry>(id, linear_tolerance_, angular_tolerance_, scale_length_);
@@ -421,7 +494,8 @@ std::unique_ptr<const api::RoadGeometry> Builder::Build(const api::RoadGeometryI
     for (auto& connection : group->connections()) {
       maliput::log()->debug("connection: {}", connection->id());
       MALIPUT_DEMAND(!connection_was_built[connection]);
-      lane_map[connection] = BuildConnection(connection, junction, road_geometry.get(), &bp_map);
+      lane_map[connection] =
+          BuildConnection(connection, junction, elevation_bounds_, angular_tolerance_, road_geometry.get(), &bp_map);
       connection_was_built[connection] = true;
     }
   }
@@ -433,7 +507,8 @@ std::unique_ptr<const api::RoadGeometry> Builder::Build(const api::RoadGeometryI
     Junction* junction = road_geometry->NewJunction(api::JunctionId{std::string("j:") + connection->id()});
     maliput::log()->debug("junction: {}", junction->id().string());
     maliput::log()->debug("connection: {}", connection->id());
-    lane_map[connection.get()] = BuildConnection(connection.get(), junction, road_geometry.get(), &bp_map);
+    lane_map[connection.get()] = BuildConnection(connection.get(), junction, elevation_bounds_, angular_tolerance_,
+                                                 road_geometry.get(), &bp_map);
   }
 
   for (const DefaultBranch& def : default_branches_) {

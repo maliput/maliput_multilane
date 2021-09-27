@@ -9,11 +9,12 @@
 #include <vector>
 
 #include <maliput/api/lane_data.h>
+#include <maliput/api/road_geometry.h>
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_copyable.h>
 
+#include "maliput_multilane/computation_policy.h"
 #include "maliput_multilane/connection.h"
-#include "maliput_multilane/junction.h"
 
 namespace maliput {
 namespace multilane {
@@ -565,78 +566,6 @@ class Builder : public BuilderBase {
   std::unique_ptr<const api::RoadGeometry> Build(const api::RoadGeometryId& id) const override;
 
  private:
-  // EndpointFuzzyOrder is an arbitrary strict complete ordering of Endpoints
-  // useful for, e.g., std::map.  It provides a comparison operation that
-  // treats two Endpoints within `linear_tolerance` of one another as
-  // equivalent.
-  //
-  // This is used to match up the endpoints of Connections, to determine
-  // how Connections are linked to one another.  Exact numeric equality
-  // would not be robust given the use of floating-point values in Endpoints.
-  class EndpointFuzzyOrder {
-   public:
-    MALIPUT_DEFAULT_COPY_AND_MOVE_AND_ASSIGN(EndpointFuzzyOrder)
-
-    // clang-format off
-    explicit EndpointFuzzyOrder(const double linear_tolerance)
-        : lin_tol_(linear_tolerance) {}
-    // clang-format on
-
-    bool operator()(const Endpoint& lhs, const Endpoint& rhs) const {
-      switch (fuzzy_compare(rhs.xy().x(), lhs.xy().x())) {
-        default:
-          break;
-        case -1: {
-          return true;
-        }
-        case 1: {
-          return false;
-        }
-        case 0: {
-          switch (fuzzy_compare(rhs.xy().y(), lhs.xy().y())) {
-            default:
-              break;
-            case -1: {
-              return true;
-            }
-            case 1: {
-              return false;
-            }
-            case 0: {
-              switch (fuzzy_compare(rhs.z().z(), lhs.z().z())) {
-                default:
-                  break;
-                case -1: {
-                  return true;
-                }
-                case 1: {
-                  return false;
-                }
-                case 0: {
-                  return false;
-                }
-              }
-            }
-          }
-        }
-      }
-      throw std::domain_error("fuzzy_compare domain error");
-    }
-
-   private:
-    int fuzzy_compare(const double a, const double b) const {
-      if (a < (b - lin_tol_)) {
-        return -1;
-      } else if (a > (b + lin_tol_)) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }
-
-    double lin_tol_{};
-  };
-
   struct DefaultBranch {
     DefaultBranch() = default;
 
@@ -656,15 +585,6 @@ class Builder : public BuilderBase {
     const int out_lane_index{};
     api::LaneEnd::Which out_end{};
   };
-
-  std::vector<Lane*> BuildConnection(const Connection* const cnx, Junction* const junction, RoadGeometry* const rg,
-                                     std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* const bp_map) const;
-
-  BranchPoint* FindOrCreateBranchPoint(const Endpoint& point, RoadGeometry* rg,
-                                       std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* const bp_map) const;
-
-  void AttachBranchPoint(const Endpoint& point, Lane* const lane, const api::LaneEnd::Which end, RoadGeometry* rg,
-                         std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* bp_map) const;
 
   double lane_width_{};
   api::HBounds elevation_bounds_;

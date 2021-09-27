@@ -7,7 +7,7 @@
 #include <maliput/common/maliput_copyable.h>
 
 #include "maliput_multilane/builder.h"
-#include "maliput_multilane/road_curve.h"
+#include "maliput_multilane/computation_policy.h"
 
 namespace maliput {
 namespace multilane {

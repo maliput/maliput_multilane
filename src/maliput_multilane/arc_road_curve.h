@@ -6,6 +6,7 @@
 #include <maliput/common/maliput_throw.h>
 #include <maliput/common/maliput_unused.h>
 
+#include "maliput_multilane/computation_policy.h"
 #include "maliput_multilane/road_curve.h"
 
 namespace maliput {

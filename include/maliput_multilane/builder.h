@@ -13,6 +13,7 @@
 #include <maliput/common/maliput_copyable.h>
 
 #include "maliput_multilane/connection.h"
+#include "maliput_multilane/computation_policy.h"
 #include "maliput_multilane/junction.h"
 
 namespace maliput {

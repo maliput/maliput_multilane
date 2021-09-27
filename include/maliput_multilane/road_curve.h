@@ -12,6 +12,7 @@
 #include <maliput/api/lane_data.h>
 #include <maliput/common/maliput_copyable.h>
 
+#include "maliput_multilane/computation_policy.h"
 #include "maliput_multilane/cubic_polynomial.h"
 
 namespace maliput {
@@ -41,17 +42,6 @@ class Rot3 {
 
  private:
   Eigen::Matrix<double, 3, 1, Eigen::DontAlign> rpy_;
-};
-
-/// A policy to guide all computations in a RoadCurve, in terms of
-/// speed and accuracy.
-enum class ComputationPolicy {
-  kPreferAccuracy,  ///< Always prefer accurate results,
-                    ///  even if at a slower pace (e.g. using
-                    ///  expensive numerical approximations).
-  kPreferSpeed      ///< Always prefer fast computations,
-                    ///  even if not accurate (e.g. using
-                    ///  approximated analytical expressions).
 };
 
 // TODO(maddog-tri)  Add support for Lanes with both non-zero r0 and

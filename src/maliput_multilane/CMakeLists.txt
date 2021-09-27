@@ -30,6 +30,7 @@ set_target_properties(maliput_multilane
 target_include_directories(maliput_multilane
   PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
     $<INSTALL_INTERFACE:include>
 )
 

@@ -213,6 +213,8 @@ class Connection {
   /// Possible connection geometries:  line- or arc-segment.
   enum Type { kLine, kArc };
 
+  ~Connection();
+
   /// Constructs a line-segment connection.
   ///
   /// Segment's reference curve begins at `start` and extends on the plane
@@ -274,82 +276,70 @@ class Connection {
              double linear_tolerance, double scale_length, ComputationPolicy computation_policy);
 
   /// Returns the geometric type of the path.
-  Type type() const { return type_; }
+  Type type() const;
 
   /// Returns the ID string.
-  const std::string& id() const { return id_; }
+  const std::string& id() const;
 
   /// Returns the parameters of the start point.
-  const Endpoint& start() const { return start_; }
+  const Endpoint& start() const;
 
   /// Returns the parameters of the endpoint.
-  const Endpoint& end() const { return end_; }
+  const Endpoint& end() const;
 
   /// Returns the length of the line (for line connections only).
-  double line_length() const {
-    MALIPUT_DEMAND(type_ == kLine);
-    return line_length_;
-  }
+  double line_length() const;
 
   /// Returns the radius of the arc (for arc connections only).
-  double radius() const {
-    MALIPUT_DEMAND(type_ == kArc);
-    return radius_;
-  }
+  double radius() const;
 
   /// Returns the angle of the arc (for arc connections only).
-  double d_theta() const {
-    MALIPUT_DEMAND(type_ == kArc);
-    return d_theta_;
-  }
+  double d_theta() const;
 
   /// Returns the number of lanes the Segment will contain.
-  int num_lanes() const { return num_lanes_; }
+  int num_lanes() const;
 
   /// Returns the lateral offset from the reference curve to the first Lane
   /// centerline.
-  double r0() const { return r0_; }
+  double r0() const;
 
   /// Returns lanes' width.
-  double lane_width() const { return lane_width_; }
+  double lane_width() const;
 
   /// Returns the left shoulder distance of the segment.
-  double left_shoulder() const { return left_shoulder_; }
+  double left_shoulder() const;
 
   /// Returns the right shoulder distance of the segment.
-  double right_shoulder() const { return right_shoulder_; }
+  double right_shoulder() const;
 
   /// Returns `lane_index` lane lateral distance to the reference curve.
   ///
   /// `lane_index` must be non-negative and smaller than the number of lanes of
   /// this connection.
-  double lane_offset(int lane_index) const {
-    MALIPUT_DEMAND(lane_index >= 0 && lane_index < num_lanes_);
-    return r0_ + lane_width_ * static_cast<double>(lane_index);
-  }
+  double lane_offset(int lane_index) const;
 
   /// Returns the distance from the reference curve to the right extent of the
   /// Segment.
-  double r_min() const { return r_min_; }
+  double r_min() const;
 
   /// Returns the distance from the reference curve to the left extent of the
   /// Segment.
-  double r_max() const { return r_max_; }
+  double r_max() const;
 
   /// Returns the linear tolerance, in meters, that applies to RoadCurve
   /// instances as constructed by this Connection. Refer to RoadCurve class
   /// documentation for further details.
-  double linear_tolerance() const { return linear_tolerance_; }
+  double linear_tolerance() const;
 
   /// Returns the scale length, in meters, that applies to RoadCurve instances
   /// as constructed by this Connection. Refer to RoadCurve class documentation
   /// for further details.
-  double scale_length() const { return scale_length_; }
+  double scale_length() const;
 
   /// Returns the computation policy that applies to RoadCurve instances as
   /// constructed by this Connection. Refer to RoadCurve class documentation
   /// for further details.
-  ComputationPolicy computation_policy() const { return computation_policy_; }
+  ComputationPolicy computation_policy() const;
 
   /// Returns an Endpoint describing the start of the `lane_index` lane.
   Endpoint LaneStart(int lane_index) const;
@@ -361,29 +351,9 @@ class Connection {
   std::unique_ptr<RoadCurve> CreateRoadCurve() const;
 
  private:
-  const Type type_{};
-  const std::string id_;
-  const Endpoint start_{};
-  Endpoint end_{};
-  const int num_lanes_{};
-  const double r0_{};
-  const double lane_width_{};
-  const double left_shoulder_{};
-  const double right_shoulder_{};
-  const double r_min_{};
-  const double r_max_{};
-  const double linear_tolerance_{};
-  const double scale_length_{};
-  const ComputationPolicy computation_policy_;
-  std::unique_ptr<RoadCurve> road_curve_;
-  // Bits specific to type_ == kLine:
-  double line_length_{};
-  // Bits specific to type_ == kArc:
-  double radius_{};
-  double d_theta_{};
-  double theta0_{};
-  double cx_{};
-  double cy_{};
+  class Data;
+
+  std::unique_ptr<Data> data_{};
 };
 
 /// A group of Connections.

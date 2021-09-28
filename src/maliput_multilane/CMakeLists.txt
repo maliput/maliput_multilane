@@ -12,6 +12,7 @@ set(MALIPUT_MULTILANE_SOURCES
   lane.cc
   line_road_curve.cc
   loader.cc
+  make_road_curve_for_connection.cc
   multilane_onramp_merge.cc
   road_curve.cc
   road_geometry.cc

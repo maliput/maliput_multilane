@@ -2,8 +2,7 @@
 
 #include <drake/common/eigen_types.h>
 
-#include "maliput_multilane/arc_road_curve.h"
-#include "maliput_multilane/line_road_curve.h"
+#include "maliput_multilane/make_road_curve_for_connection.h"
 
 namespace maliput {
 namespace multilane {
@@ -95,7 +94,7 @@ Connection::Connection(const std::string& id, const Endpoint& start, const Endpo
   data_->end = Endpoint({start.xy().x() + data_->line_length * std::cos(start.xy().heading()),
                          start.xy().y() + data_->line_length * std::sin(start.xy().heading()), start.xy().heading()},
                         end_z);
-  data_->road_curve = CreateRoadCurve();
+  data_->road_curve = MakeRoadCurveFor(*this);
   // TODO(agalbachicar)  Modify Connection API to provide support for HBounds
   //                     once RoadCurve's children are capable of computing
   //                     singularities with it.
@@ -142,7 +141,7 @@ Connection::Connection(const std::string& id, const Endpoint& start, const Endpo
   data_->end = Endpoint({data_->cx + data_->radius * std::cos(theta1), data_->cy + data_->radius * std::sin(theta1),
                          start.xy().heading() + data_->d_theta},
                         end_z);
-  data_->road_curve = CreateRoadCurve();
+  data_->road_curve = MakeRoadCurveFor(*this);
   // TODO(agalbachicar)  Modify Connection API to provide support for HBounds
   //                     once RoadCurve's children are capable of computing
   //                     singularities with it.
@@ -270,51 +269,7 @@ Endpoint Connection::LaneEnd(int lane_index) const {
   return Endpoint({position[0], position[1], rotation.yaw()}, {position[2], z_dot, data_->end.z().theta(), theta_dot});
 }
 
-namespace {
-// Construct a CubicPolynomial such that:
-//    f(0) = Y0 / dX           f'(0) = Ydot0
-//    f(1) = (Y0 + dY) / dX    f'(1) = Ydot1
-//
-// This is equivalent to taking a cubic polynomial g such that:
-//    g(0) = Y0          g'(0) = Ydot0
-//    g(dX) = Y0 + dY    g'(1) = Ydot1
-// and isotropically scaling it (scale both axes) by a factor of 1/dX
-CubicPolynomial MakeCubic(double dX, double Y0, double dY, double Ydot0, double Ydot1) {
-  return CubicPolynomial(Y0 / dX, Ydot0, (3. * dY / dX) - (2. * Ydot0) - Ydot1, Ydot0 + Ydot1 - (2. * dY / dX));
-}
-}  // namespace
-
-std::unique_ptr<RoadCurve> Connection::CreateRoadCurve() const {
-  switch (data_->type) {
-    case Connection::kLine: {
-      const drake::Vector2<double> xy0(data_->start.xy().x(), data_->start.xy().y());
-      const drake::Vector2<double> dxy(data_->end.xy().x() - data_->start.xy().x(),
-                                       data_->end.xy().y() - data_->start.xy().y());
-      const CubicPolynomial elevation(MakeCubic(dxy.norm(), data_->start.z().z(),
-                                                data_->end.z().z() - data_->start.z().z(), data_->start.z().z_dot(),
-                                                data_->end.z().z_dot()));
-      const CubicPolynomial superelevation(MakeCubic(dxy.norm(), data_->start.z().theta(),
-                                                     data_->end.z().theta() - data_->start.z().theta(),
-                                                     *data_->start.z().theta_dot(), *data_->end.z().theta_dot()));
-      return std::make_unique<LineRoadCurve>(xy0, dxy, elevation, superelevation, data_->linear_tolerance,
-                                             data_->scale_length, data_->computation_policy);
-    };
-    case Connection::kArc: {
-      const drake::Vector2<double> center(data_->cx, data_->cy);
-      const double arc_length = data_->radius * std::abs(data_->d_theta);
-      const CubicPolynomial elevation(MakeCubic(arc_length, data_->start.z().z(),
-                                                data_->end.z().z() - data_->start.z().z(), data_->start.z().z_dot(),
-                                                data_->end.z().z_dot()));
-      const CubicPolynomial superelevation(MakeCubic(arc_length, data_->start.z().theta(),
-                                                     data_->end.z().theta() - data_->start.z().theta(),
-                                                     *data_->start.z().theta_dot(), *data_->end.z().theta_dot()));
-      return std::make_unique<ArcRoadCurve>(center, data_->radius, data_->theta0, data_->d_theta, elevation,
-                                            superelevation, data_->linear_tolerance, data_->scale_length,
-                                            data_->computation_policy);
-    };
-  }
-  MALIPUT_ABORT_MESSAGE("type_ is neither Connection::kArc nor Connection::kLine.");
-}
+std::unique_ptr<RoadCurve> Connection::CreateRoadCurve() const { return MakeRoadCurveFor(*this); }
 
 }  // namespace multilane
 }  // namespace maliput

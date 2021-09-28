@@ -6,7 +6,6 @@
 
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/connection.h"
-#include "maliput_multilane/cubic_polynomial.h"
 
 namespace maliput {
 namespace multilane {
@@ -88,18 +87,6 @@ using ::testing::MatchResultListener;
 // @p linear_tolerance and @p angular_tolerance deviations.
 ::testing::AssertionResult IsArcOffsetClose(const ArcOffset& arc_offset1, const ArcOffset& arc_offset2,
                                             double linear_tolerance, double angular_tolerance);
-
-// Compares equality within @p tolerance of @p cubic1 and @p cubic2
-// coefficients.
-// @param cubic1 A CubicPolynomial object to compare.
-// @param cubic2 A CubicPolynomial object to compare.
-// @param tolerance An allowable absolute linear deviation for each coefficient.
-// @return ::testing::AssertionFailure() When any coefficient of
-// CubicPolynomial objects are different.
-// @return ::testing::AssertionSuccess() When all coefficients of
-// CubicPolynomial objects are equal.
-::testing::AssertionResult IsCubicPolynomialClose(const CubicPolynomial& cubic1, const CubicPolynomial& cubic2,
-                                                  double tolerance);
 
 /// Wraps api::HBounds comparison into a MatcherInterface.
 class HBoundsMatcher : public MatcherInterface<const api::HBounds&> {

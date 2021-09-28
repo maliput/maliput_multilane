@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 
 namespace maliput {
 namespace multilane {

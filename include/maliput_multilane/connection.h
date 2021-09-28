@@ -12,7 +12,6 @@
 #include <maliput/common/maliput_copyable.h>
 
 #include "maliput_multilane/computation_policy.h"
-#include "maliput_multilane/road_curve.h"
 
 namespace maliput {
 namespace multilane {
@@ -346,9 +345,6 @@ class Connection {
 
   /// Returns an Endpoint describing the end of the `lane_index` lane.
   Endpoint LaneEnd(int lane_index) const;
-
-  /// Creates a RoadCurve that describes the reference curve of this Connection.
-  std::unique_ptr<RoadCurve> CreateRoadCurve() const;
 
  private:
   class Data;

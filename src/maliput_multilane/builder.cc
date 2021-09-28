@@ -11,6 +11,7 @@
 #include "maliput_multilane/cubic_polynomial.h"
 #include "maliput_multilane/junction.h"
 #include "maliput_multilane/line_road_curve.h"
+#include "maliput_multilane/make_road_curve_for_connection.h"
 #include "maliput_multilane/road_geometry.h"
 
 namespace maliput {
@@ -463,7 +464,7 @@ std::vector<Lane*> BuildConnection(const Connection* const conn, Junction* const
                                    const api::HBounds& elevation_bounds, double angular_tolerance,
                                    RoadGeometry* const road_geometry,
                                    std::map<Endpoint, BranchPoint*, EndpointFuzzyOrder>* const bp_map) {
-  Segment* segment = junction->NewSegment(api::SegmentId{std::string("s:") + conn->id()}, conn->CreateRoadCurve(),
+  Segment* segment = junction->NewSegment(api::SegmentId{std::string("s:") + conn->id()}, MakeRoadCurveFor(*conn),
                                           conn->r_min(), conn->r_max(), elevation_bounds);
   std::vector<Lane*> lanes;
   for (int i = 0; i < conn->num_lanes(); i++) {

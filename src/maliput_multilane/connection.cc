@@ -269,7 +269,5 @@ Endpoint Connection::LaneEnd(int lane_index) const {
   return Endpoint({position[0], position[1], rotation.yaw()}, {position[2], z_dot, data_->end.z().theta(), theta_dot});
 }
 
-std::unique_ptr<RoadCurve> Connection::CreateRoadCurve() const { return MakeRoadCurveFor(*this); }
-
 }  // namespace multilane
 }  // namespace maliput

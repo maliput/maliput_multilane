@@ -12,6 +12,7 @@
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/cubic_polynomial.h"
 #include "maliput_multilane/line_road_curve.h"
+#include "maliput_multilane/make_road_curve_for_connection.h"
 #include "maliput_multilane_test_utilities/eigen_matrix_compare.h"
 #include "maliput_multilane_test_utilities/multilane_types_compare.h"
 
@@ -194,7 +195,7 @@ TEST_F(MultilaneConnectionTest, ArcRoadCurveValidation) {
 
   const Connection flat_dut(kId, kStartEndpoint, kLowFlatZ, kNumLanes, kR0, kLaneWidth, kLeftShoulder, kRightShoulder,
                             kArcOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> road_curve = flat_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> road_curve = MakeRoadCurveFor(flat_dut);
   EXPECT_NE(dynamic_cast<ArcRoadCurve*>(road_curve.get()), nullptr);
   // Checks that the road curve starts and ends at given endpoints.
   const drake::Vector3<double> flat_origin = road_curve->W_of_prh(0., 0., 0.);
@@ -220,7 +221,7 @@ TEST_F(MultilaneConnectionTest, ArcRoadCurveValidation) {
   const Endpoint kEndElevatedEndpoint{{40., 30., kHeading + kDTheta}, {5., 1., M_PI / 6., 1.}};
   const Connection complex_dut(kId, kStartEndpoint, kEndElevatedEndpoint.z(), kNumLanes, kR0, kLaneWidth, kLeftShoulder,
                                kRightShoulder, kArcOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> complex_road_curve = complex_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> complex_road_curve = MakeRoadCurveFor(complex_dut);
   // Checks that the road curve starts and ends at given endpoints.
   const drake::Vector3<double> complex_origin = complex_road_curve->W_of_prh(0., 0., 0.);
   EXPECT_TRUE(CompareMatrices(
@@ -250,7 +251,7 @@ TEST_F(MultilaneConnectionTest, LineRoadCurveValidation) {
   const LineOffset kLineOffset{kLineLength};
   const Connection flat_dut(kId, kStartEndpoint, kLowFlatZ, kNumLanes, kR0, kLaneWidth, kLeftShoulder, kRightShoulder,
                             kLineOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> road_curve = flat_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> road_curve = MakeRoadCurveFor(flat_dut);
   EXPECT_NE(dynamic_cast<LineRoadCurve*>(road_curve.get()), nullptr);
 
   // Checks that the road curve starts and ends at given endpoints.
@@ -277,7 +278,7 @@ TEST_F(MultilaneConnectionTest, LineRoadCurveValidation) {
   const Endpoint kEndElevatedEndpoint{{50., 0., kHeading}, {5., 1., M_PI / 6., 1.}};
   const Connection complex_dut(kId, kStartEndpoint, kEndElevatedEndpoint.z(), kNumLanes, kR0, kLaneWidth, kLeftShoulder,
                                kRightShoulder, kLineOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> complex_road_curve = complex_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> complex_road_curve = MakeRoadCurveFor(complex_dut);
 
   // Checks that the road curve starts and ends at given endpoints.
   const drake::Vector3<double> complex_origin = complex_road_curve->W_of_prh(0., 0., 0.);

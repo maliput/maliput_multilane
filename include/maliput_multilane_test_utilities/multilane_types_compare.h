@@ -6,6 +6,7 @@
 
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/connection.h"
+#include "maliput_multilane/cubic_polynomial.h"
 
 namespace maliput {
 namespace multilane {

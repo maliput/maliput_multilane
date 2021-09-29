@@ -347,9 +347,9 @@ class Connection {
   Endpoint LaneEnd(int lane_index) const;
 
  private:
-  class Data;
+  struct Data;
 
-  std::unique_ptr<Data> data_{};
+  std::unique_ptr<Data> data_;
 };
 
 /// A group of Connections.

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 
 namespace maliput {
 namespace multilane {
@@ -164,34 +165,6 @@ namespace test {
              "arc_offset2 =\n{}\nwith linear tolerance = {}\n"
              "and angular tolerance ={}",
              arc_offset1, arc_offset2, linear_tolerance, angular_tolerance);
-}
-
-::testing::AssertionResult IsCubicPolynomialClose(const CubicPolynomial& cubic1, const CubicPolynomial& cubic2,
-                                                  double tolerance) {
-  bool fails = false;
-  std::string error_message{};
-  const std::vector<std::string> coefficient_strs{"a", "b", "c", "d"};
-  const std::vector<double> coefficients1{cubic1.a(), cubic1.b(), cubic1.c(), cubic1.d()};
-  const std::vector<double> coefficients2{cubic2.a(), cubic2.b(), cubic2.c(), cubic2.d()};
-
-  for (int i = 0; i < 4; ++i) {
-    const double delta = std::abs(coefficients1[i] - coefficients2[i]);
-    if (delta > tolerance) {
-      fails = true;
-      error_message += fmt::format(
-          "Cubic polynomials are different at {0} coefficient. "
-          "cubic1.{0}(): {1} vs. cubic2.{0}(): {2}, diff = {3}, "
-          "tolerance = {4}\n",
-          coefficient_strs[i], coefficients1[i], coefficients2[i], delta, tolerance);
-    }
-  }
-  if (fails) {
-    return ::testing::AssertionFailure() << error_message;
-  }
-  return ::testing::AssertionSuccess() << fmt::format(
-             "cubic1 =\n{}\nis approximately equal to cubic2 =\n{}"
-             "\ntolerance = {}",
-             cubic1, cubic2, tolerance);
 }
 
 Matcher<const api::HBounds&> Matches(const api::HBounds& elevation_bounds, double tolerance) {

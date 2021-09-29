@@ -12,11 +12,53 @@
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/cubic_polynomial.h"
 #include "maliput_multilane/line_road_curve.h"
+#include "maliput_multilane/make_road_curve_for_connection.h"
 #include "maliput_multilane_test_utilities/eigen_matrix_compare.h"
 #include "maliput_multilane_test_utilities/multilane_types_compare.h"
 
 namespace maliput {
 namespace multilane {
+namespace test {
+
+// Compares equality within @p tolerance of @p cubic1 and @p cubic2
+// coefficients.
+// @param cubic1 A CubicPolynomial object to compare.
+// @param cubic2 A CubicPolynomial object to compare.
+// @param tolerance An allowable absolute linear deviation for each coefficient.
+// @return ::testing::AssertionFailure() When any coefficient of
+// CubicPolynomial objects are different.
+// @return ::testing::AssertionSuccess() When all coefficients of
+// CubicPolynomial objects are equal.
+::testing::AssertionResult IsCubicPolynomialClose(const CubicPolynomial& cubic1, const CubicPolynomial& cubic2,
+                                                  double tolerance) {
+  bool fails = false;
+  std::string error_message{};
+  const std::vector<std::string> coefficient_strs{"a", "b", "c", "d"};
+  const std::vector<double> coefficients1{cubic1.a(), cubic1.b(), cubic1.c(), cubic1.d()};
+  const std::vector<double> coefficients2{cubic2.a(), cubic2.b(), cubic2.c(), cubic2.d()};
+
+  for (int i = 0; i < 4; ++i) {
+    const double delta = std::abs(coefficients1[i] - coefficients2[i]);
+    if (delta > tolerance) {
+      fails = true;
+      error_message += fmt::format(
+          "Cubic polynomials are different at {0} coefficient. "
+          "cubic1.{0}(): {1} vs. cubic2.{0}(): {2}, diff = {3}, "
+          "tolerance = {4}\n",
+          coefficient_strs[i], coefficients1[i], coefficients2[i], delta, tolerance);
+    }
+  }
+  if (fails) {
+    return ::testing::AssertionFailure() << error_message;
+  }
+  return ::testing::AssertionSuccess() << fmt::format(
+             "cubic1 =\n{}\nis approximately equal to cubic2 =\n{}"
+             "\ntolerance = {}",
+             cubic1, cubic2, tolerance);
+}
+
+}  // namespace test
+
 namespace {
 
 // EndpointXy checks.
@@ -194,7 +236,7 @@ TEST_F(MultilaneConnectionTest, ArcRoadCurveValidation) {
 
   const Connection flat_dut(kId, kStartEndpoint, kLowFlatZ, kNumLanes, kR0, kLaneWidth, kLeftShoulder, kRightShoulder,
                             kArcOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> road_curve = flat_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> road_curve = MakeRoadCurveFor(flat_dut);
   EXPECT_NE(dynamic_cast<ArcRoadCurve*>(road_curve.get()), nullptr);
   // Checks that the road curve starts and ends at given endpoints.
   const drake::Vector3<double> flat_origin = road_curve->W_of_prh(0., 0., 0.);
@@ -220,7 +262,7 @@ TEST_F(MultilaneConnectionTest, ArcRoadCurveValidation) {
   const Endpoint kEndElevatedEndpoint{{40., 30., kHeading + kDTheta}, {5., 1., M_PI / 6., 1.}};
   const Connection complex_dut(kId, kStartEndpoint, kEndElevatedEndpoint.z(), kNumLanes, kR0, kLaneWidth, kLeftShoulder,
                                kRightShoulder, kArcOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> complex_road_curve = complex_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> complex_road_curve = MakeRoadCurveFor(complex_dut);
   // Checks that the road curve starts and ends at given endpoints.
   const drake::Vector3<double> complex_origin = complex_road_curve->W_of_prh(0., 0., 0.);
   EXPECT_TRUE(CompareMatrices(
@@ -250,7 +292,7 @@ TEST_F(MultilaneConnectionTest, LineRoadCurveValidation) {
   const LineOffset kLineOffset{kLineLength};
   const Connection flat_dut(kId, kStartEndpoint, kLowFlatZ, kNumLanes, kR0, kLaneWidth, kLeftShoulder, kRightShoulder,
                             kLineOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> road_curve = flat_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> road_curve = MakeRoadCurveFor(flat_dut);
   EXPECT_NE(dynamic_cast<LineRoadCurve*>(road_curve.get()), nullptr);
 
   // Checks that the road curve starts and ends at given endpoints.
@@ -277,7 +319,7 @@ TEST_F(MultilaneConnectionTest, LineRoadCurveValidation) {
   const Endpoint kEndElevatedEndpoint{{50., 0., kHeading}, {5., 1., M_PI / 6., 1.}};
   const Connection complex_dut(kId, kStartEndpoint, kEndElevatedEndpoint.z(), kNumLanes, kR0, kLaneWidth, kLeftShoulder,
                                kRightShoulder, kLineOffset, kLinearTolerance, kScaleLength, kComputationPolicy);
-  std::unique_ptr<RoadCurve> complex_road_curve = complex_dut.CreateRoadCurve();
+  std::unique_ptr<RoadCurve> complex_road_curve = MakeRoadCurveFor(complex_dut);
 
   // Checks that the road curve starts and ends at given endpoints.
   const drake::Vector3<double> complex_origin = complex_road_curve->W_of_prh(0., 0., 0.);

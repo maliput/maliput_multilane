@@ -2,8 +2,7 @@
 
 #include <drake/common/eigen_types.h>
 
-#include "maliput_multilane/arc_road_curve.h"
-#include "maliput_multilane/line_road_curve.h"
+#include "maliput_multilane/make_road_curve_for_connection.h"
 
 namespace maliput {
 namespace multilane {
@@ -33,92 +32,175 @@ std::ostream& operator<<(std::ostream& out, const ArcOffset& arc_offset) {
   return out << "(r: " << arc_offset.radius() << ", d_theta: " << arc_offset.d_theta() << ")";
 }
 
+struct Connection::Data {
+  Type type{};
+  std::string id;
+  Endpoint start{};
+  Endpoint end{};
+  int num_lanes{};
+  double r0{};
+  double lane_width{};
+  double left_shoulder{};
+  double right_shoulder{};
+  double r_min{};
+  double r_max{};
+  double linear_tolerance{};
+  double scale_length{};
+  ComputationPolicy computation_policy;
+  std::unique_ptr<RoadCurve> road_curve;
+  // Bits specific to type == kLine:
+  double line_length{};
+  // Bits specific to type == kArc:
+  double radius{};
+  double d_theta{};
+  double theta0{};
+  double cx{};
+  double cy{};
+};
+
+Connection::~Connection() {}
+
 Connection::Connection(const std::string& id, const Endpoint& start, const EndpointZ& end_z, int num_lanes, double r0,
                        double lane_width, double left_shoulder, double right_shoulder, const LineOffset& line_offset,
-                       double linear_tolerance, double scale_length, ComputationPolicy computation_policy)
-    : type_(kLine),
-      id_(id),
-      start_(start),
-      num_lanes_(num_lanes),
-      r0_(r0),
-      lane_width_(lane_width),
-      left_shoulder_(left_shoulder),
-      right_shoulder_(right_shoulder),
-      r_min_(r0 - lane_width / 2. - right_shoulder),
-      r_max_(r0 + lane_width * (static_cast<double>(num_lanes - 1) + 0.5) + left_shoulder),
-      linear_tolerance_(linear_tolerance),
-      scale_length_(scale_length),
-      computation_policy_(computation_policy),
-      line_length_(line_offset.length()) {
-  MALIPUT_DEMAND(num_lanes_ > 0);
-  MALIPUT_DEMAND(lane_width_ >= 0);
-  MALIPUT_DEMAND(left_shoulder_ >= 0);
-  MALIPUT_DEMAND(right_shoulder_ >= 0);
-  MALIPUT_DEMAND(r_max_ >= r_min_);
-  MALIPUT_DEMAND(linear_tolerance_ > 0.);
-  MALIPUT_DEMAND(scale_length_ > 0.);
-  MALIPUT_DEMAND(line_length_ > 0.);
+                       double linear_tolerance, double scale_length, ComputationPolicy computation_policy) {
+  MALIPUT_DEMAND(num_lanes > 0);
+  MALIPUT_DEMAND(lane_width >= 0);
+  MALIPUT_DEMAND(left_shoulder >= 0);
+  MALIPUT_DEMAND(right_shoulder >= 0);
+  MALIPUT_DEMAND(linear_tolerance > 0.);
+  MALIPUT_DEMAND(scale_length > 0.);
+  MALIPUT_DEMAND(line_offset.length() > 0.);
   MALIPUT_DEMAND(start.z().theta_dot().has_value());
   MALIPUT_DEMAND(end_z.theta_dot().has_value());
+
+  data_ = std::make_unique<Data>();
+  data_->type = kLine;
+  data_->id = id;
+  data_->start = start;
+  data_->num_lanes = num_lanes;
+  data_->r0 = r0;
+  data_->lane_width = lane_width;
+  data_->left_shoulder = left_shoulder;
+  data_->right_shoulder = right_shoulder;
+  data_->r_min = r0 - lane_width / 2. - right_shoulder;
+  data_->r_max = r0 + lane_width * (static_cast<double>(num_lanes - 1) + 0.5) + left_shoulder;
+  MALIPUT_DEMAND(data_->r_max >= data_->r_min);
+
+  data_->linear_tolerance = linear_tolerance;
+  data_->scale_length = scale_length;
+  data_->computation_policy = computation_policy;
+  data_->line_length = line_offset.length();
   // Computes end Endpoint and RoadCurve.
-  end_ = Endpoint({start_.xy().x() + line_length_ * std::cos(start_.xy().heading()),
-                   start_.xy().y() + line_length_ * std::sin(start_.xy().heading()), start_.xy().heading()},
-                  end_z);
-  road_curve_ = CreateRoadCurve();
+  data_->end = Endpoint({start.xy().x() + data_->line_length * std::cos(start.xy().heading()),
+                         start.xy().y() + data_->line_length * std::sin(start.xy().heading()), start.xy().heading()},
+                        end_z);
+  data_->road_curve = MakeRoadCurveFor(*this);
   // TODO(agalbachicar)  Modify Connection API to provide support for HBounds
   //                     once RoadCurve's children are capable of computing
   //                     singularities with it.
-  MALIPUT_DEMAND(road_curve_->IsValid(r_min_, r_max_, {0., 0.}));
+  MALIPUT_DEMAND(data_->road_curve->IsValid(data_->r_min, data_->r_max, {0., 0.}));
 }
 
 Connection::Connection(const std::string& id, const Endpoint& start, const EndpointZ& end_z, int num_lanes, double r0,
                        double lane_width, double left_shoulder, double right_shoulder, const ArcOffset& arc_offset,
-                       double linear_tolerance, double scale_length, ComputationPolicy computation_policy)
-    : type_(kArc),
-      id_(id),
-      start_(start),
-      num_lanes_(num_lanes),
-      r0_(r0),
-      lane_width_(lane_width),
-      left_shoulder_(left_shoulder),
-      right_shoulder_(right_shoulder),
-      r_min_(r0 - lane_width / 2. - right_shoulder),
-      r_max_(r0 + lane_width * (static_cast<double>(num_lanes - 1) + 0.5) + left_shoulder),
-      linear_tolerance_(linear_tolerance),
-      scale_length_(scale_length),
-      computation_policy_(computation_policy),
-      radius_(arc_offset.radius()),
-      d_theta_(arc_offset.d_theta()) {
-  MALIPUT_DEMAND(num_lanes_ > 0);
-  MALIPUT_DEMAND(lane_width_ >= 0);
-  MALIPUT_DEMAND(left_shoulder_ >= 0);
-  MALIPUT_DEMAND(right_shoulder_ >= 0);
-  MALIPUT_DEMAND(r_max_ >= r_min_);
-  MALIPUT_DEMAND(linear_tolerance_ > 0.);
-  MALIPUT_DEMAND(scale_length_ > 0.);
-  MALIPUT_DEMAND(radius_ > 0);
+                       double linear_tolerance, double scale_length, ComputationPolicy computation_policy) {
+  MALIPUT_DEMAND(num_lanes > 0);
+  MALIPUT_DEMAND(lane_width >= 0);
+  MALIPUT_DEMAND(left_shoulder >= 0);
+  MALIPUT_DEMAND(right_shoulder >= 0);
+  MALIPUT_DEMAND(linear_tolerance > 0.);
+  MALIPUT_DEMAND(scale_length > 0.);
+  MALIPUT_DEMAND(arc_offset.radius() > 0);
   MALIPUT_DEMAND(start.z().theta_dot().has_value());
   MALIPUT_DEMAND(end_z.theta_dot().has_value());
+
+  data_ = std::make_unique<Data>();
+  data_->type = kArc;
+  data_->id = id;
+  data_->start = start;
+  data_->num_lanes = num_lanes;
+  data_->r0 = r0;
+  data_->lane_width = lane_width;
+  data_->left_shoulder = left_shoulder;
+  data_->right_shoulder = right_shoulder;
+  data_->r_min = r0 - lane_width / 2. - right_shoulder;
+  data_->r_max = r0 + lane_width * (static_cast<double>(num_lanes - 1) + 0.5) + left_shoulder;
+  MALIPUT_DEMAND(data_->r_max >= data_->r_min);
+  data_->linear_tolerance = linear_tolerance;
+  data_->scale_length = scale_length;
+  data_->computation_policy = computation_policy;
+  data_->radius = arc_offset.radius();
+  data_->d_theta = arc_offset.d_theta();
+
   // Fills arc related parameters, computes end Endpoint and creates the
   // RoadCurve.
-  theta0_ = start_.xy().heading() - std::copysign(M_PI / 2., d_theta_);
-  cx_ = start.xy().x() - (radius_ * std::cos(theta0_));
-  cy_ = start.xy().y() - (radius_ * std::sin(theta0_));
-  const double theta1 = theta0_ + d_theta_;
-  end_ = Endpoint(
-      {cx_ + radius_ * std::cos(theta1), cy_ + radius_ * std::sin(theta1), start_.xy().heading() + d_theta_}, end_z);
-  road_curve_ = CreateRoadCurve();
+  data_->theta0 = start.xy().heading() - std::copysign(M_PI / 2., data_->d_theta);
+  data_->cx = start.xy().x() - (data_->radius * std::cos(data_->theta0));
+  data_->cy = start.xy().y() - (data_->radius * std::sin(data_->theta0));
+  const double theta1 = data_->theta0 + data_->d_theta;
+  data_->end = Endpoint({data_->cx + data_->radius * std::cos(theta1), data_->cy + data_->radius * std::sin(theta1),
+                         start.xy().heading() + data_->d_theta},
+                        end_z);
+  data_->road_curve = MakeRoadCurveFor(*this);
   // TODO(agalbachicar)  Modify Connection API to provide support for HBounds
   //                     once RoadCurve's children are capable of computing
   //                     singularities with it.
-  MALIPUT_DEMAND(road_curve_->IsValid(r_min_, r_max_, {0., 0.}));
+  MALIPUT_DEMAND(data_->road_curve->IsValid(data_->r_min, data_->r_max, {0., 0.}));
 }
 
+Connection::Type Connection::type() const { return data_->type; }
+
+const std::string& Connection::id() const { return data_->id; }
+
+const Endpoint& Connection::start() const { return data_->start; }
+
+const Endpoint& Connection::end() const { return data_->end; }
+
+double Connection::line_length() const {
+  MALIPUT_DEMAND(data_->type == kLine);
+  return data_->line_length;
+}
+
+double Connection::radius() const {
+  MALIPUT_DEMAND(data_->type == kArc);
+  return data_->radius;
+}
+
+double Connection::d_theta() const {
+  MALIPUT_DEMAND(data_->type == kArc);
+  return data_->d_theta;
+}
+
+int Connection::num_lanes() const { return data_->num_lanes; }
+
+double Connection::r0() const { return data_->r0; }
+
+double Connection::lane_width() const { return data_->lane_width; }
+
+double Connection::left_shoulder() const { return data_->left_shoulder; }
+
+double Connection::right_shoulder() const { return data_->right_shoulder; }
+
+double Connection::lane_offset(int lane_index) const {
+  MALIPUT_DEMAND(lane_index >= 0 && lane_index < data_->num_lanes);
+  return data_->r0 + data_->lane_width * static_cast<double>(lane_index);
+}
+
+double Connection::r_min() const { return data_->r_min; }
+
+double Connection::r_max() const { return data_->r_max; }
+
+double Connection::linear_tolerance() const { return data_->linear_tolerance; }
+
+double Connection::scale_length() const { return data_->scale_length; }
+
+ComputationPolicy Connection::computation_policy() const { return data_->computation_policy; }
+
 Endpoint Connection::LaneStart(int lane_index) const {
-  MALIPUT_DEMAND(lane_index >= 0 && lane_index < num_lanes_);
+  MALIPUT_DEMAND(lane_index >= 0 && lane_index < data_->num_lanes);
   const double r = lane_offset(lane_index);
-  const drake::Vector3<double> position = road_curve_->W_of_prh(0., r, 0.);
-  const Rot3 rotation = road_curve_->Orientation(0., r, 0.);
+  const drake::Vector3<double> position = data_->road_curve->W_of_prh(0., r, 0.);
+  const Rot3 rotation = data_->road_curve->Orientation(0., r, 0.);
   // Let t be the arc-length xy projection of the lane centerline and t_of_p be
   // a linear function of p (given that p <--> s is a linear relation too).
   // Given z_dot = ∂z/∂t, chain rule can be applied so:
@@ -128,31 +210,34 @@ Endpoint Connection::LaneStart(int lane_index) const {
   // The same applies to theta_dot.
 
   // Computes w_prime to obtain ∂z/∂p.
-  const drake::Vector3<double> w_prime =
-      road_curve_->W_prime_of_prh(0., r, 0., road_curve_->Rabg_of_p(0.), road_curve_->elevation().f_dot_p(0.));
+  const drake::Vector3<double> w_prime = data_->road_curve->W_prime_of_prh(0., r, 0., data_->road_curve->Rabg_of_p(0.),
+                                                                           data_->road_curve->elevation().f_dot_p(0.));
   // Computes ∂p/∂t based on Connection geometry type.
 
   // TODO(maddog-tri)  A (second-order?) contribution of theta_dot to ∂p/∂t is
   //                   being ignored.
-  const double cos_superelevation = std::cos(road_curve_->superelevation().f_p(0.));
-  const double t_max = type_ == kLine
-                           ? line_length_
-                           : std::abs(d_theta_ * (radius_ - std::copysign(1., d_theta_) * r * cos_superelevation));
+  const double cos_superelevation = std::cos(data_->road_curve->superelevation().f_p(0.));
+  const double t_max =
+      data_->type == kLine
+          ? data_->line_length
+          : std::abs(data_->d_theta * (data_->radius - std::copysign(1., data_->d_theta) * r * cos_superelevation));
   // Given that ∂p/∂t = 1 / t_max.
   const double z_dot = w_prime.z() / t_max;
   // theta_dot is derivative with respect to t, but the reference curve t
   // coordinate. So, a ∂t_0/∂t_i is needed, being t_0 the reference curve
   // coordinate and t_i the arc-length xy projection for lane_index lane.
-  const double theta_dot =
-      type_ == kLine ? *start_.z().theta_dot() : (*start_.z().theta_dot()) * std::abs(d_theta_ * radius_) / t_max;
-  return Endpoint({position[0], position[1], rotation.yaw()}, {position[2], z_dot, start_.z().theta(), theta_dot});
+  const double theta_dot = data_->type == kLine
+                               ? *data_->start.z().theta_dot()
+                               : (*data_->start.z().theta_dot()) * std::abs(data_->d_theta * data_->radius) / t_max;
+  return Endpoint({position[0], position[1], rotation.yaw()},
+                  {position[2], z_dot, data_->start.z().theta(), theta_dot});
 }
 
 Endpoint Connection::LaneEnd(int lane_index) const {
-  MALIPUT_DEMAND(lane_index >= 0 && lane_index < num_lanes_);
+  MALIPUT_DEMAND(lane_index >= 0 && lane_index < data_->num_lanes);
   const double r = lane_offset(lane_index);
-  const drake::Vector3<double> position = road_curve_->W_of_prh(1., r, 0.);
-  const Rot3 rotation = road_curve_->Orientation(1., r, 0.);
+  const drake::Vector3<double> position = data_->road_curve->W_of_prh(1., r, 0.);
+  const Rot3 rotation = data_->road_curve->Orientation(1., r, 0.);
   // Let t be the arc-length xy projection of the lane centerline and t_of_p be
   // a linear function of p (given that p <--> s is a linear relation too).
   // Given z_dot = ∂z/∂t, chain rule can be applied so:
@@ -162,66 +247,26 @@ Endpoint Connection::LaneEnd(int lane_index) const {
   // The same applies to theta_dot.
 
   // Computes w_prime to obtain ∂z/∂p.
-  const drake::Vector3<double> w_prime =
-      road_curve_->W_prime_of_prh(1., r, 0., road_curve_->Rabg_of_p(1.), road_curve_->elevation().f_dot_p(1.));
+  const drake::Vector3<double> w_prime = data_->road_curve->W_prime_of_prh(1., r, 0., data_->road_curve->Rabg_of_p(1.),
+                                                                           data_->road_curve->elevation().f_dot_p(1.));
   // Computes ∂p/∂t based on Connection geometry type.
 
   // TODO(maddog-tri)  A (second-order?) contribution of theta_dot to ∂p/∂t is
   //                   being ignored.
-  const double cos_superelevation = std::cos(road_curve_->superelevation().f_p(1.));
-  const double t_max = type_ == kLine
-                           ? line_length_
-                           : std::abs(d_theta_ * (radius_ - std::copysign(1., d_theta_) * r * cos_superelevation));
+  const double cos_superelevation = std::cos(data_->road_curve->superelevation().f_p(1.));
+  const double t_max =
+      data_->type == kLine
+          ? data_->line_length
+          : std::abs(data_->d_theta * (data_->radius - std::copysign(1., data_->d_theta) * r * cos_superelevation));
   // Given that ∂p/∂t = 1 / t_max.
   const double z_dot = w_prime.z() / t_max;
   // theta_dot is derivative with respect to t, but the reference curve t
   // coordinate. So, a ∂t_0/∂t_i is needed, being t_0 the reference curve
   // coordinate and t_i the arc-length xy projection for lane_index lane.
-  const double theta_dot =
-      type_ == kLine ? *end_.z().theta_dot() : (*end_.z().theta_dot()) * std::abs(d_theta_ * radius_) / t_max;
-  return Endpoint({position[0], position[1], rotation.yaw()}, {position[2], z_dot, end_.z().theta(), theta_dot});
-}
-
-namespace {
-// Construct a CubicPolynomial such that:
-//    f(0) = Y0 / dX           f'(0) = Ydot0
-//    f(1) = (Y0 + dY) / dX    f'(1) = Ydot1
-//
-// This is equivalent to taking a cubic polynomial g such that:
-//    g(0) = Y0          g'(0) = Ydot0
-//    g(dX) = Y0 + dY    g'(1) = Ydot1
-// and isotropically scaling it (scale both axes) by a factor of 1/dX
-CubicPolynomial MakeCubic(double dX, double Y0, double dY, double Ydot0, double Ydot1) {
-  return CubicPolynomial(Y0 / dX, Ydot0, (3. * dY / dX) - (2. * Ydot0) - Ydot1, Ydot0 + Ydot1 - (2. * dY / dX));
-}
-}  // namespace
-
-std::unique_ptr<RoadCurve> Connection::CreateRoadCurve() const {
-  switch (type_) {
-    case Connection::kLine: {
-      const drake::Vector2<double> xy0(start_.xy().x(), start_.xy().y());
-      const drake::Vector2<double> dxy(end_.xy().x() - start_.xy().x(), end_.xy().y() - start_.xy().y());
-      const CubicPolynomial elevation(
-          MakeCubic(dxy.norm(), start_.z().z(), end_.z().z() - start_.z().z(), start_.z().z_dot(), end_.z().z_dot()));
-      const CubicPolynomial superelevation(MakeCubic(dxy.norm(), start_.z().theta(),
-                                                     end_.z().theta() - start_.z().theta(), *start_.z().theta_dot(),
-                                                     *end_.z().theta_dot()));
-      return std::make_unique<LineRoadCurve>(xy0, dxy, elevation, superelevation, linear_tolerance_, scale_length_,
-                                             computation_policy_);
-    };
-    case Connection::kArc: {
-      const drake::Vector2<double> center(cx_, cy_);
-      const double arc_length = radius_ * std::abs(d_theta_);
-      const CubicPolynomial elevation(
-          MakeCubic(arc_length, start_.z().z(), end_.z().z() - start_.z().z(), start_.z().z_dot(), end_.z().z_dot()));
-      const CubicPolynomial superelevation(MakeCubic(arc_length, start_.z().theta(),
-                                                     end_.z().theta() - start_.z().theta(), *start_.z().theta_dot(),
-                                                     *end_.z().theta_dot()));
-      return std::make_unique<ArcRoadCurve>(center, radius_, theta0_, d_theta_, elevation, superelevation,
-                                            linear_tolerance_, scale_length_, computation_policy_);
-    };
-  }
-  MALIPUT_ABORT_MESSAGE("type_ is neither Connection::kArc nor Connection::kLine.");
+  const double theta_dot = data_->type == kLine
+                               ? *data_->end.z().theta_dot()
+                               : (*data_->end.z().theta_dot()) * std::abs(data_->d_theta * data_->radius) / t_max;
+  return Endpoint({position[0], position[1], rotation.yaw()}, {position[2], z_dot, data_->end.z().theta(), theta_dot});
 }
 
 }  // namespace multilane

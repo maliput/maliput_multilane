@@ -177,29 +177,29 @@ TEST_F(MultilaneArcRoadCurveTest, ToCurveFrameTest) {
   const ArcRoadCurve dut(kCenter, kRadius, kTheta0, kDTheta, zp, zp, kLinearTolerance, kScaleLength,
                          kComputationPolicy);
   // Checks points over the composed curve.
-  EXPECT_TRUE(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter(0) + kRadius * std::cos(kTheta0),
-                                                            kCenter(1) + kRadius * std::sin(kTheta0), 0.0),
+  EXPECT_TRUE(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta0),
+                                                            kCenter[1] + kRadius * std::sin(kTheta0), 0.0),
                                               kRMin, kRMax, height_bounds),
                              math::Vector3(0.0, 0.0, 0.0), kVeryExact));
   EXPECT_TRUE(
-      CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter(0) + kRadius * std::cos(kTheta0 + kDTheta / 2.0),
-                                                    kCenter(1) + kRadius * std::sin(kTheta0 + kDTheta / 2.0), 0.0),
+      CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta0 + kDTheta / 2.0),
+                                                    kCenter[1] + kRadius * std::sin(kTheta0 + kDTheta / 2.0), 0.0),
                                       kRMin, kRMax, height_bounds),
                      math::Vector3(0.5, 0.0, 0.0), kVeryExact));
-  EXPECT_TRUE(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter(0) + kRadius * std::cos(kTheta1),
-                                                            kCenter(1) + kRadius * std::sin(kTheta1), 0.0),
+  EXPECT_TRUE(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta1),
+                                                            kCenter[1] + kRadius * std::sin(kTheta1), 0.0),
                                               kRMin, kRMax, height_bounds),
                              math::Vector3(1., 0.0, 0.0), kVeryExact));
   // Checks with lateral and vertical deviations.
   EXPECT_TRUE(
-      CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter(0) + (kRadius + 1.0) * std::cos(kTheta0 + M_PI / 8.0),
-                                                    kCenter(1) + (kRadius + 1.0) * std::sin(kTheta0 + M_PI / 8.0), 6.0),
+      CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + (kRadius + 1.0) * std::cos(kTheta0 + M_PI / 8.0),
+                                                    kCenter[1] + (kRadius + 1.0) * std::sin(kTheta0 + M_PI / 8.0), 6.0),
                                       kRMin, kRMax, height_bounds),
                      math::Vector3(0.25, -1.0, 6.0), kVeryExact));
   EXPECT_TRUE(CompareVectors(
       dut.ToCurveFrame(
-          math::Vector3(kCenter(0) + (kRadius - 2.0) * std::cos(kTheta0 + kDTheta / 2.0 + M_PI / 8.0),
-                        kCenter(1) + (kRadius - 2.0) * std::sin(kTheta0 + kDTheta / 2.0 + M_PI / 8.0), 3.0),
+          math::Vector3(kCenter[0] + (kRadius - 2.0) * std::cos(kTheta0 + kDTheta / 2.0 + M_PI / 8.0),
+                        kCenter[1] + (kRadius - 2.0) * std::sin(kTheta0 + kDTheta / 2.0 + M_PI / 8.0), 3.0),
           kRMin, kRMax, height_bounds),
       math::Vector3(0.75, 2.0, 3.0), kVeryExact));
 }
@@ -332,8 +332,9 @@ TEST_F(MultilaneArcRoadCurveTest, WorldFunctionDerivative) {
   // Numerically evaluates the derivative of a road curve world function
   // with respect to p at [p, r, h] with a five-point stencil.
   auto numeric_w_prime_of_prh = [kDifferential](const RoadCurve& dut, double p, double r, double h) -> math::Vector3 {
-    const math::Vector3 dw = -dut.W_of_prh(p + 2. * kDifferential, r, h) + 8. * dut.W_of_prh(p + kDifferential, r, h) -
-                             8. * dut.W_of_prh(p - kDifferential, r, h) + dut.W_of_prh(p - 2. * kDifferential, r, h);
+    const math::Vector3 dw = -1. * dut.W_of_prh(p + 2. * kDifferential, r, h) +
+                             8. * dut.W_of_prh(p + kDifferential, r, h) - 8. * dut.W_of_prh(p - kDifferential, r, h) +
+                             dut.W_of_prh(p - 2. * kDifferential, r, h);
     return dw / (12. * kDifferential);
   };
 

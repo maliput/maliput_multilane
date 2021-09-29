@@ -23,7 +23,7 @@ math::Vector3 LineRoadCurve::ToCurveFrame(const math::Vector3& geo_coordinate, d
   // TODO(jadecastro): Lift the zero superelevation and zero elevation gradient
   // restriction.
   const math::Vector2 s_unit_vector = dp_ / dp_.norm();
-  const math::Vector2 r_unit_vector{-s_unit_vector(1), s_unit_vector(0)};
+  const math::Vector2 r_unit_vector{-s_unit_vector[1], s_unit_vector[0]};
 
   const math::Vector2 q(geo_coordinate.x(), geo_coordinate.y());
   const math::Vector2 lane_origin_to_q = q - p0_;

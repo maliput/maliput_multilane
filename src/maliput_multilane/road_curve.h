@@ -204,10 +204,10 @@ class RoadCurve {
   math::Vector3 W_prime_of_prh(double p, double r, double h, const Rot3& Rabg, double g_prime) const;
 
   /// Returns the rotation R_αβγ, evaluated at @p p along the reference curve.
-  math::RollPitchYaw Rabg_of_p(double p) const;
+  Rot3 Rabg_of_p(double p) const;
 
   /// Returns the rotation R_αβγ, evaluated at @p p, @p r and @p h.
-  math::RollPitchYaw Orientation(double p, double r, double h) const;
+  Rot3 Orientation(double p, double r, double h) const;
 
   /// Returns the s-axis unit-vector, expressed in the world frame,
   /// of the (s,r,h) `Lane`-frame (with respect to the world frame).

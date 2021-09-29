@@ -63,6 +63,8 @@ using maliput::math::test::CompareVectors;
 
 namespace {
 
+using maliput::math::test::CompareVectors;
+
 // EndpointXy checks.
 GTEST_TEST(EndpointXyTest, DefaultConstructor) {
   const EndpointXy dut{};

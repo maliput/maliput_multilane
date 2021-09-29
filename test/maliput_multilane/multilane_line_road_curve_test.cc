@@ -237,8 +237,9 @@ TEST_F(MultilaneLineRoadCurveTest, WorldFunctionDerivative) {
   // Numerically evaluates the derivative of a road curve world function
   // with respect to p at [p, r, h] with a five-point stencil.
   auto numeric_w_prime_of_prh = [kDifferential](const RoadCurve& dut, double p, double r, double h) -> math::Vector3 {
-    const math::Vector3 dw = -dut.W_of_prh(p + 2. * kDifferential, r, h) + 8. * dut.W_of_prh(p + kDifferential, r, h) -
-                             8. * dut.W_of_prh(p - kDifferential, r, h) + dut.W_of_prh(p - 2. * kDifferential, r, h);
+    const math::Vector3 dw = -1. * dut.W_of_prh(p + 2. * kDifferential, r, h) +
+                             8. * dut.W_of_prh(p + kDifferential, r, h) - 8. * dut.W_of_prh(p - kDifferential, r, h) +
+                             dut.W_of_prh(p - 2. * kDifferential, r, h);
     return dw / (12. * kDifferential);
   };
 

@@ -88,7 +88,7 @@ math::Vector3 ArcRoadCurve::ToCurveFrame(const math::Vector3& geo_coordinate, do
   const double theta_max = std::max(theta0_, d_theta_ + theta0_);
 
   // First, find a saturated theta that is nearest to point q.
-  const double theta_nearest = saturate_on_wrapped_bounds(std::atan2(v(1), v(0)), theta_min, theta_max);
+  const double theta_nearest = saturate_on_wrapped_bounds(std::atan2(v[1], v[0]), theta_min, theta_max);
   // Find the angle swept from the beginning of the lane (s = 0) to
   // theta_nearest.
   const double d_theta_nearest = (d_theta_ > 0.) ? theta_nearest - wrap(theta_min) : wrap(theta_max) - theta_nearest;

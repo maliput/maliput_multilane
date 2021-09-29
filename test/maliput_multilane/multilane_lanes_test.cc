@@ -6,6 +6,7 @@
 #include <map>
 
 #include <gtest/gtest.h>
+#include <maliput/test_utilities/maliput_math_compare.h>
 #include <maliput/test_utilities/maliput_types_compare.h>
 
 #include "maliput_multilane/arc_road_curve.h"
@@ -14,11 +15,12 @@
 #include "maliput_multilane/road_curve.h"
 #include "maliput_multilane/road_geometry.h"
 #include "maliput_multilane/segment.h"
-#include "maliput_multilane_test_utilities/eigen_matrix_compare.h"
 
 namespace maliput {
 namespace multilane {
 namespace {
+
+using maliput::math::test::CompareVectors;
 
 const double kLinearTolerance = 1e-6;
 const double kAngularTolerance = 1e-6;
@@ -27,9 +29,9 @@ const double kVeryExact = 1e-12;
 GTEST_TEST(MultilaneLanesTest, Rot3) {
   // Spot-check that Rot3 is behaving as advertised.
   Rot3 rpy90{M_PI / 2., M_PI / 2., M_PI / 2.};
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({1., 0., 0.}), drake::Vector3<double>(0., 0., -1.), kVeryExact));
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 1., 0.}), drake::Vector3<double>(0., 1., 0.), kVeryExact));
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 0., 1.}), drake::Vector3<double>(1., 0., 0.), kVeryExact));
+  EXPECT_TRUE(CompareVectors(rpy90.apply({1., 0., 0.}), math::Vector3(0., 0., -1.), kVeryExact));
+  EXPECT_TRUE(CompareVectors(rpy90.apply({0., 1., 0.}), math::Vector3(0., 1., 0.), kVeryExact));
+  EXPECT_TRUE(CompareVectors(rpy90.apply({0., 0., 1.}), math::Vector3(1., 0., 0.), kVeryExact));
 }
 
 class MultilaneLanesParamTest : public ::testing::TestWithParam<double> {
@@ -47,9 +49,8 @@ class MultilaneLanesParamTest : public ::testing::TestWithParam<double> {
 
 TEST_P(MultilaneLanesParamTest, FlatLineLane) {
   RoadGeometry rg(api::RoadGeometryId{"apple"}, kLinearTolerance, kAngularTolerance, kScaleLength);
-  std::unique_ptr<RoadCurve> road_curve_1 =
-      std::make_unique<LineRoadCurve>(drake::Vector2<double>(100., -75.), drake::Vector2<double>(100., 50.), zp, zp,
-                                      kLinearTolerance, kScaleLength, kComputationPolicy);
+  std::unique_ptr<RoadCurve> road_curve_1 = std::make_unique<LineRoadCurve>(
+      math::Vector2(100., -75.), math::Vector2(100., 50.), zp, zp, kLinearTolerance, kScaleLength, kComputationPolicy);
   const math::Vector3 s_vector = math::Vector3(100., 50., 0.).normalized();
   const math::Vector3 r_vector = math::Vector3(-50, 100., 0.).normalized();
   const math::Vector3 r_offset_vector = r0 * r_vector;
@@ -127,8 +128,8 @@ TEST_P(MultilaneLanesParamTest, FlatLineLane) {
   const double elevation = 10.;
   const double length = std::sqrt(std::pow(100, 2.) + std::pow(50, 2.));
   std::unique_ptr<RoadCurve> road_curve_2 = std::make_unique<LineRoadCurve>(
-      drake::Vector2<double>(100., -75.), drake::Vector2<double>(100., 50.),
-      CubicPolynomial(elevation / length, 0.0, 0.0, 0.0), zp, kLinearTolerance, kScaleLength, kComputationPolicy);
+      math::Vector2(100., -75.), math::Vector2(100., 50.), CubicPolynomial(elevation / length, 0.0, 0.0, 0.0), zp,
+      kLinearTolerance, kScaleLength, kComputationPolicy);
   Segment* s2 = rg.NewJunction(api::JunctionId{"j2"})
                     ->NewSegment(api::SegmentId{"s2"}, std::move(road_curve_2), -kHalfWidth + r0, kHalfWidth + r0,
                                  {0., kMaxHeight});
@@ -180,32 +181,29 @@ namespace {
 
 // Exact corkscrew curve parameterization, for numerical
 // approximation validation.
-//
-// @tparam T must be a valid Eigen ScalarType.
-template <typename T>
 class CorkScrew {
  public:
   // Constructs a corkscrew with the given @p radius,
   // @p axial_length and @p number_of_turns.
-  CorkScrew(const T& radius, const T& axial_length, const T& number_of_turns);
+  CorkScrew(const double& radius, const double& axial_length, const double& number_of_turns);
 
   // Returns the (x, y, z) position in the global frame at the
   // provided @p srh location on the corkscrew.
-  drake::Vector3<T> position_at_srh(const drake::Vector3<T>& srh) const;
+  math::Vector3 position_at_srh(const math::Vector3& srh) const;
 
   // Returns the (r, p, y) orientation triplet in the global frame
   // at the provided @p srh location on the corkscrew.
-  drake::Vector3<T> orientation_at_srh(const drake::Vector3<T>& srh) const;
+  math::Vector3 orientation_at_srh(const math::Vector3& srh) const;
 
   // Returns the (ṡ, ṙ, ḣ) velocity at the provided @p srh location
   // on the corkscrew, scaled by the @p iso_v velocity in the
   // (σ, ρ, η) frame i.e. a frame attached to the corkscrew frame
   // but isotropic with the global frame (such that said velocity
   // represents a real velocity).
-  drake::Vector3<T> motion_derivative_at_srh(const drake::Vector3<T>& srh, const drake::Vector3<T>& iso_v) const;
+  math::Vector3 motion_derivative_at_srh(const math::Vector3& srh, const math::Vector3& iso_v) const;
 
   // Returns the path length of the corkscrew.
-  inline T length() const { return length_; }
+  inline double length() const { return length_; }
 
  private:
   // The radius of the corkscrew.
@@ -221,61 +219,56 @@ class CorkScrew {
   const double length_;
 };
 
-template <typename T>
-CorkScrew<T>::CorkScrew(const T& radius, const T& axial_length, const T& number_of_turns)
+CorkScrew::CorkScrew(const double& radius, const double& axial_length, const double& number_of_turns)
     : radius_(radius),
       axial_length_(axial_length),
       angular_length_(2 * M_PI * number_of_turns),
       length_(std::sqrt(std::pow(axial_length_, 2) + std::pow(angular_length_ * radius_, 2))) {}
 
-template <typename T>
-drake::Vector3<T> CorkScrew<T>::position_at_srh(const drake::Vector3<T>& srh) const {
+math::Vector3 CorkScrew::position_at_srh(const math::Vector3& srh) const {
   // TODO(hidmic): Assuming the LANE frame s-axis is always aligned
   //               with the GLOBAL frame x-axis is incorrect. However,
   //               this same bug is present in Multilane. Fix this
   //               computation when the implementation gets fixed.
-  const T p = srh(0) / length();
-  const T effective_r_offset = srh(1) + radius_;
-  const T sgamma = std::sin(angular_length_ * p);
-  const T cgamma = std::cos(angular_length_ * p);
-  return drake::Vector3<T>(axial_length_ * p, effective_r_offset * cgamma - srh(2) * sgamma,
-                           effective_r_offset * sgamma + srh(2) * cgamma);
+  const double p = srh[0] / length();
+  const double effective_r_offset = srh[1] + radius_;
+  const double sgamma = std::sin(angular_length_ * p);
+  const double cgamma = std::cos(angular_length_ * p);
+  return math::Vector3(axial_length_ * p, effective_r_offset * cgamma - srh[2] * sgamma,
+                       effective_r_offset * sgamma + srh[2] * cgamma);
 }
 
-template <typename T>
-drake::Vector3<T> CorkScrew<T>::motion_derivative_at_srh(const drake::Vector3<T>& srh,
-                                                         const drake::Vector3<T>& iso_v) const {
+math::Vector3 CorkScrew::motion_derivative_at_srh(const math::Vector3& srh, const math::Vector3& iso_v) const {
   // TODO(hidmic): Assuming the LANE frame s-axis is always aligned
   //               with the GLOBAL frame x-axis is incorrect. However,
   //               this same bug is present in Multilane. Fix this
   //               computation when the implementation gets fixed.
-  const T p = srh(0) / length();
-  const T sgamma = std::sin(angular_length_ * p);
-  const T cgamma = std::cos(angular_length_ * p);
-  const T alpha = angular_length_ * (srh(1) + radius_);
-  const T alpha0 = angular_length_ * radius_;
-  const T beta = angular_length_ * srh(2);
-  const drake::Vector3<T> position_derivative_at_p00(axial_length_, -alpha0 * sgamma, alpha0 * cgamma);
-  const drake::Vector3<T> position_derivative_at_prh(axial_length_, -alpha * sgamma - beta * cgamma,
-                                                     alpha * cgamma - beta * sgamma);
-  return iso_v.cwiseProduct(
-      drake::Vector3<T>(position_derivative_at_p00.norm() / position_derivative_at_prh.norm(), 1., 1.));
+  const double p = srh[0] / length();
+  const double sgamma = std::sin(angular_length_ * p);
+  const double cgamma = std::cos(angular_length_ * p);
+  const double alpha = angular_length_ * (srh[1] + radius_);
+  const double alpha0 = angular_length_ * radius_;
+  const double beta = angular_length_ * srh[2];
+  const math::Vector3 position_derivative_at_p00(axial_length_, -alpha0 * sgamma, alpha0 * cgamma);
+  const math::Vector3 position_derivative_at_prh(axial_length_, -alpha * sgamma - beta * cgamma,
+                                                 alpha * cgamma - beta * sgamma);
+  return math::Vector3(position_derivative_at_p00.norm() / position_derivative_at_prh.norm() * iso_v[0], iso_v[1],
+                       iso_v[2]);
 }
 
-template <typename T>
-drake::Vector3<T> CorkScrew<T>::orientation_at_srh(const drake::Vector3<T>& srh) const {
+math::Vector3 CorkScrew::orientation_at_srh(const math::Vector3& srh) const {
   // TODO(hidmic): Assuming the LANE frame s-axis is always aligned
   //               with the GLOBAL frame x-axis is incorrect. However,
   //               this same bug is present in Multilane. Fix this
   //               computation when the implementation gets fixed.
-  const T p = srh(0) / length();
-  const T effective_r_offset = srh(1) + radius_;
-  const T sgamma = std::sin(angular_length_ * p);
-  const T cgamma = std::cos(angular_length_ * p);
-  const drake::Vector3<T> s_vec(axial_length_, -angular_length_ * (effective_r_offset * sgamma + srh(2) * cgamma),
-                                angular_length_ * (effective_r_offset * cgamma - srh(2) * sgamma));
-  const drake::Vector3<T> s_hat = s_vec.normalized();
-  const drake::Vector3<T> r_hat(0., cgamma, sgamma);
+  const double p = srh[0] / length();
+  const double effective_r_offset = srh[1] + radius_;
+  const double sgamma = std::sin(angular_length_ * p);
+  const double cgamma = std::cos(angular_length_ * p);
+  const math::Vector3 s_vec(axial_length_, -angular_length_ * (effective_r_offset * sgamma + srh[2] * cgamma),
+                            angular_length_ * (effective_r_offset * cgamma - srh[2] * sgamma));
+  const math::Vector3 s_hat = s_vec.normalized();
+  const math::Vector3 r_hat(0., cgamma, sgamma);
   // TODO(hidmic): Make use of drake::math::RollPitchYaw:
   //
   // drake::Matrix3<T> rotmat;
@@ -285,11 +278,11 @@ drake::Vector3<T> CorkScrew<T>::orientation_at_srh(const drake::Vector3<T>& srh)
   // Code below is a verbatim partial transcription of the
   // RoadCurve::Orientation() method implementation that, somehow, gives a
   // different output than that of above's code snippet for the same input.
-  const T gamma = std::atan2(s_hat.y(), s_hat.x());
-  const T beta = std::atan2(-s_hat.z(), drake::Vector2<T>(s_hat.x(), s_hat.y()).norm());
-  const T cb = std::cos(beta);
-  const T alpha = std::atan2(r_hat.z() / cb, ((r_hat.y() * s_hat.x()) - (r_hat.x() * s_hat.y())) / cb);
-  return drake::Vector3<T>(alpha, beta, gamma);
+  const double gamma = std::atan2(s_hat.y(), s_hat.x());
+  const double beta = std::atan2(-s_hat.z(), math::Vector2(s_hat.x(), s_hat.y()).norm());
+  const double cb = std::cos(beta);
+  const double alpha = std::atan2(r_hat.z() / cb, ((r_hat.y() * s_hat.x()) - (r_hat.x() * s_hat.y())) / cb);
+  return math::Vector3(alpha, beta, gamma);
 }
 
 }  // namespace
@@ -301,7 +294,7 @@ drake::Vector3<T> CorkScrew<T>::orientation_at_srh(const drake::Vector3<T>& srh)
 TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
   const int kTurns = 10;
   const double kLength = 20.;
-  const CorkScrew<double> corkscrew_curve(r0, kLength, kTurns);
+  const CorkScrew corkscrew_curve(r0, kLength, kTurns);
   // Reproduces the same superelevation profile as that of the corkscrew.
   const CubicPolynomial corkscrew_polynomial(0., 2. * M_PI * kTurns / kLength, 0., 0.);
 
@@ -309,9 +302,9 @@ TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
   // half the path length of a single corkscrew
   // turn.
   const double kCorkscrewScaleLength = corkscrew_curve.length() / (2 * kTurns);
-  std::unique_ptr<RoadCurve> road_curve = std::make_unique<LineRoadCurve>(
-      drake::Vector2<double>(0., 0.), drake::Vector2<double>(kLength, 0.), zp, corkscrew_polynomial, kLinearTolerance,
-      kCorkscrewScaleLength, kComputationPolicy);
+  std::unique_ptr<RoadCurve> road_curve =
+      std::make_unique<LineRoadCurve>(math::Vector2(0., 0.), math::Vector2(kLength, 0.), zp, corkscrew_polynomial,
+                                      kLinearTolerance, kCorkscrewScaleLength, kComputationPolicy);
 
   RoadGeometry rg(api::RoadGeometryId{"corkscrew"}, kLinearTolerance, kAngularTolerance, kScaleLength);
   Segment* s1 = rg.NewJunction(api::JunctionId{"j1"})
@@ -336,7 +329,7 @@ TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
   EXPECT_TRUE(api::test::IsHBoundsClose(l1->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact));
 
   const api::IsoLaneVelocity lane_velocity(1., 10., 100.);
-  const drake::Vector3<double> lane_velocity_as_vector(lane_velocity.sigma_v, lane_velocity.rho_v, lane_velocity.eta_v);
+  const math::Vector3 lane_velocity_as_vector(lane_velocity.sigma_v, lane_velocity.rho_v, lane_velocity.eta_v);
 
   const std::vector<double> lane_position_s_offsets = {0., 1., l1->length() / 2., l1->length() - 1., l1->length()};
   const std::vector<double> lane_position_r_offsets = {-kHalfWidth, -kHalfWidth + 1., -1.,       0.,
@@ -348,12 +341,12 @@ TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
       for (double h_offset : lane_position_h_offsets) {
         // Instantiates lane position with current offsets.
         const api::LanePosition lane_position(s_offset, r_offset, h_offset);
-        const math::Vector3 lane_position_srh{lane_position.srh()};
-        const drake::Vector3<double> position_at_srh_drake{
+        const auto lane_position_srh{lane_position.srh()};
+        const auto position_at_srh_drake{
             corkscrew_curve.position_at_srh({lane_position_srh.x(), lane_position_srh.y(), lane_position_srh.z()})};
-        const drake::Vector3<double> orientation_at_srh_drake{
+        const auto orientation_at_srh_drake{
             corkscrew_curve.orientation_at_srh({lane_position_srh.x(), lane_position_srh.y(), lane_position_srh.z()})};
-        const drake::Vector3<double> motion_derivative_at_srh_drake{corkscrew_curve.motion_derivative_at_srh(
+        const auto motion_derivative_at_srh_drake{corkscrew_curve.motion_derivative_at_srh(
             {lane_position_srh.x(), lane_position_srh.y(), lane_position_srh.z()}, lane_velocity_as_vector)};
         // Checks position in the (x, y, z) frame i.e. world
         // down to kLinearTolerance accuracy (as that's the
@@ -394,7 +387,7 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
   const double theta0 = 0.25 * M_PI;
   const double d_theta = 1.5 * M_PI;
   const double radius = 100.;
-  const drake::Vector2<double> center{100., -75.};
+  const math::Vector2 center{100., -75.};
   const double offset_radius = radius - r0;
 
   std::unique_ptr<RoadCurve> road_curve_1 = std::make_unique<ArcRoadCurve>(
@@ -620,7 +613,7 @@ TEST_P(MultilaneLanesParamTest, HillIntegration) {
   //   and f'(0) = f'(1) = 0.
   const CubicPolynomial kHillPolynomial(z0 / l_max, 0., (3. * (z1 - z0) / l_max), (-2. * (z1 - z0) / l_max));
   std::unique_ptr<RoadCurve> road_curve =
-      std::make_unique<ArcRoadCurve>(drake::Vector2<double>(-100., -100.), radius, theta0, d_theta, kHillPolynomial, zp,
+      std::make_unique<ArcRoadCurve>(math::Vector2(-100., -100.), radius, theta0, d_theta, kHillPolynomial, zp,
                                      kLinearTolerance, kScaleLength, kComputationPolicy);
   const double kLaneSpacing = 2. * kHalfLaneWidth;
   const double kLeftWidth = kLaneSpacing + kHalfLaneWidth;
@@ -690,7 +683,7 @@ GTEST_TEST(MultilaneLanesTest, ArcLaneWithConstantSuperelevation) {
 
   RoadGeometry rg(api::RoadGeometryId{"apple"}, kLinearTolerance, kAngularTolerance, kScaleLength);
   std::unique_ptr<RoadCurve> road_curve_1 = std::make_unique<ArcRoadCurve>(
-      drake::Vector2<double>(100., -75.), 100.0, 0.25 * M_PI, 1.5 * M_PI, zp,
+      math::Vector2(100., -75.), 100.0, 0.25 * M_PI, 1.5 * M_PI, zp,
       CubicPolynomial((kTheta) / (100. * 1.5 * M_PI), 0., 0., 0.), kLinearTolerance, kScaleLength, kComputationPolicy);
   Segment* s1 = rg.NewJunction(api::JunctionId{"j1"})
                     ->NewSegment(api::SegmentId{"s1"}, std::move(road_curve_1), -kHalfWidth + kR0, kHalfWidth + kR0,
@@ -778,9 +771,8 @@ class MultilaneMultipleLanesTest : public ::testing::Test {
 
 TEST_F(MultilaneMultipleLanesTest, MultipleLineLanes) {
   RoadGeometry rg(api::RoadGeometryId{"apple"}, kLinearTolerance, kAngularTolerance, kScaleLength);
-  std::unique_ptr<RoadCurve> road_curve =
-      std::make_unique<LineRoadCurve>(drake::Vector2<double>(100., -75.), drake::Vector2<double>(100., 50.), zp, zp,
-                                      kLinearTolerance, kScaleLength, kComputationPolicy);
+  std::unique_ptr<RoadCurve> road_curve = std::make_unique<LineRoadCurve>(
+      math::Vector2(100., -75.), math::Vector2(100., 50.), zp, zp, kLinearTolerance, kScaleLength, kComputationPolicy);
   Segment* s1 = rg.NewJunction(api::JunctionId{"j1"})
                     ->NewSegment(api::SegmentId{"s1"}, std::move(road_curve), kRMin, kRMax, height_bounds);
   const Lane* l0 = s1->NewLane(api::LaneId{"l0"}, kR0, {-8., kHalfLaneWidth});
@@ -892,7 +884,7 @@ TEST_F(MultilaneMultipleLanesTest, MultipleArcLanes) {
   const double kTheta0{0.25 * M_PI};
   const double kDTheta{1.5 * M_PI};
   const double kRadius{100.};
-  const drake::Vector2<double> kCenter{100., -75.};
+  const math::Vector2 kCenter{100., -75.};
   const math::Vector3 kGeoCenter{kCenter[0], kCenter[1], 0.};
 
   RoadGeometry rg(api::RoadGeometryId{"apple"}, kLinearTolerance, kAngularTolerance, kScaleLength);

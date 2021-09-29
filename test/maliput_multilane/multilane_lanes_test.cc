@@ -6,6 +6,7 @@
 #include <map>
 
 #include <gtest/gtest.h>
+#include <maliput/test_utilities/maliput_math_compare.h>
 #include <maliput/test_utilities/maliput_types_compare.h>
 
 #include "maliput_multilane/arc_road_curve.h"
@@ -14,11 +15,12 @@
 #include "maliput_multilane/road_curve.h"
 #include "maliput_multilane/road_geometry.h"
 #include "maliput_multilane/segment.h"
-#include "maliput_multilane_test_utilities/eigen_matrix_compare.h"
 
 namespace maliput {
 namespace multilane {
 namespace {
+
+using maliput::math::test::CompareVectors;
 
 const double kLinearTolerance = 1e-6;
 const double kAngularTolerance = 1e-6;
@@ -27,9 +29,9 @@ const double kVeryExact = 1e-12;
 GTEST_TEST(MultilaneLanesTest, Rot3) {
   // Spot-check that Rot3 is behaving as advertised.
   Rot3 rpy90{M_PI / 2., M_PI / 2., M_PI / 2.};
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({1., 0., 0.}), math::Vector3(0., 0., -1.), kVeryExact));
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 1., 0.}), math::Vector3(0., 1., 0.), kVeryExact));
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 0., 1.}), math::Vector3(1., 0., 0.), kVeryExact));
+  EXPECT_TRUE(CompareVectors(rpy90.apply({1., 0., 0.}), math::Vector3(0., 0., -1.), kVeryExact));
+  EXPECT_TRUE(CompareVectors(rpy90.apply({0., 1., 0.}), math::Vector3(0., 1., 0.), kVeryExact));
+  EXPECT_TRUE(CompareVectors(rpy90.apply({0., 0., 1.}), math::Vector3(1., 0., 0.), kVeryExact));
 }
 
 class MultilaneLanesParamTest : public ::testing::TestWithParam<double> {

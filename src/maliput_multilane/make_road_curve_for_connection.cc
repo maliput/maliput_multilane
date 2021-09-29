@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-#include <drake/common/eigen_types.h>
 #include <maliput/common/maliput_abort.h>
+#include <maliput/math/vector.h>
 
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/computation_policy.h"
@@ -29,9 +29,9 @@ CubicPolynomial MakeCubic(double dX, double Y0, double dY, double Ydot0, double 
 std::unique_ptr<RoadCurve> MakeRoadCurveFor(const Connection& connection) {
   switch (connection.type()) {
     case Connection::kLine: {
-      const drake::Vector2<double> xy0(connection.start().xy().x(), connection.start().xy().y());
-      const drake::Vector2<double> dxy(connection.end().xy().x() - connection.start().xy().x(),
-                                       connection.end().xy().y() - connection.start().xy().y());
+      const math::Vector2 xy0(connection.start().xy().x(), connection.start().xy().y());
+      const math::Vector2 dxy(connection.end().xy().x() - connection.start().xy().x(),
+                              connection.end().xy().y() - connection.start().xy().y());
       const CubicPolynomial elevation(MakeCubic(dxy.norm(), connection.start().z().z(),
                                                 connection.end().z().z() - connection.start().z().z(),
                                                 connection.start().z().z_dot(), connection.end().z().z_dot()));
@@ -44,8 +44,8 @@ std::unique_ptr<RoadCurve> MakeRoadCurveFor(const Connection& connection) {
     case Connection::kArc: {
       const double arc_length = connection.radius() * std::abs(connection.d_theta());
       const double theta0 = connection.start().xy().heading() - std::copysign(M_PI / 2., connection.d_theta());
-      const drake::Vector2<double> center(connection.start().xy().x() - (connection.radius() * std::cos(theta0)),
-                                          connection.start().xy().y() - (connection.radius() * std::sin(theta0)));
+      const math::Vector2 center(connection.start().xy().x() - (connection.radius() * std::cos(theta0)),
+                                 connection.start().xy().y() - (connection.radius() * std::sin(theta0)));
       const CubicPolynomial elevation(MakeCubic(arc_length, connection.start().z().z(),
                                                 connection.end().z().z() - connection.start().z().z(),
                                                 connection.start().z().z_dot(), connection.end().z().z_dot()));

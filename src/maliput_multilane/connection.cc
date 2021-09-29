@@ -1,6 +1,6 @@
 #include "maliput_multilane/connection.h"
 
-#include <drake/common/eigen_types.h>
+#include <maliput/math/vector.h>
 
 #include "maliput_multilane/make_road_curve_for_connection.h"
 
@@ -199,7 +199,7 @@ ComputationPolicy Connection::computation_policy() const { return data_->computa
 Endpoint Connection::LaneStart(int lane_index) const {
   MALIPUT_DEMAND(lane_index >= 0 && lane_index < data_->num_lanes);
   const double r = lane_offset(lane_index);
-  const drake::Vector3<double> position = data_->road_curve->W_of_prh(0., r, 0.);
+  const math::Vector3 position = data_->road_curve->W_of_prh(0., r, 0.);
   const Rot3 rotation = data_->road_curve->Orientation(0., r, 0.);
   // Let t be the arc-length xy projection of the lane centerline and t_of_p be
   // a linear function of p (given that p <--> s is a linear relation too).
@@ -210,8 +210,8 @@ Endpoint Connection::LaneStart(int lane_index) const {
   // The same applies to theta_dot.
 
   // Computes w_prime to obtain ∂z/∂p.
-  const drake::Vector3<double> w_prime = data_->road_curve->W_prime_of_prh(0., r, 0., data_->road_curve->Rabg_of_p(0.),
-                                                                           data_->road_curve->elevation().f_dot_p(0.));
+  const math::Vector3 w_prime = data_->road_curve->W_prime_of_prh(0., r, 0., data_->road_curve->Rabg_of_p(0.),
+                                                                  data_->road_curve->elevation().f_dot_p(0.));
   // Computes ∂p/∂t based on Connection geometry type.
 
   // TODO(maddog-tri)  A (second-order?) contribution of theta_dot to ∂p/∂t is
@@ -236,7 +236,7 @@ Endpoint Connection::LaneStart(int lane_index) const {
 Endpoint Connection::LaneEnd(int lane_index) const {
   MALIPUT_DEMAND(lane_index >= 0 && lane_index < data_->num_lanes);
   const double r = lane_offset(lane_index);
-  const drake::Vector3<double> position = data_->road_curve->W_of_prh(1., r, 0.);
+  const math::Vector3 position = data_->road_curve->W_of_prh(1., r, 0.);
   const Rot3 rotation = data_->road_curve->Orientation(1., r, 0.);
   // Let t be the arc-length xy projection of the lane centerline and t_of_p be
   // a linear function of p (given that p <--> s is a linear relation too).
@@ -247,8 +247,8 @@ Endpoint Connection::LaneEnd(int lane_index) const {
   // The same applies to theta_dot.
 
   // Computes w_prime to obtain ∂z/∂p.
-  const drake::Vector3<double> w_prime = data_->road_curve->W_prime_of_prh(1., r, 0., data_->road_curve->Rabg_of_p(1.),
-                                                                           data_->road_curve->elevation().f_dot_p(1.));
+  const math::Vector3 w_prime = data_->road_curve->W_prime_of_prh(1., r, 0., data_->road_curve->Rabg_of_p(1.),
+                                                                  data_->road_curve->elevation().f_dot_p(1.));
   // Computes ∂p/∂t based on Connection geometry type.
 
   // TODO(maddog-tri)  A (second-order?) contribution of theta_dot to ∂p/∂t is

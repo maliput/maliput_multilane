@@ -27,9 +27,9 @@ const double kVeryExact = 1e-12;
 GTEST_TEST(MultilaneLanesTest, Rot3) {
   // Spot-check that Rot3 is behaving as advertised.
   Rot3 rpy90{M_PI / 2., M_PI / 2., M_PI / 2.};
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({1., 0., 0.}), drake::Vector3<double>(0., 0., -1.), kVeryExact));
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 1., 0.}), drake::Vector3<double>(0., 1., 0.), kVeryExact));
-  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 0., 1.}), drake::Vector3<double>(1., 0., 0.), kVeryExact));
+  EXPECT_TRUE(CompareMatrices(rpy90.apply({1., 0., 0.}), math::Vector3(0., 0., -1.), kVeryExact));
+  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 1., 0.}), math::Vector3(0., 1., 0.), kVeryExact));
+  EXPECT_TRUE(CompareMatrices(rpy90.apply({0., 0., 1.}), math::Vector3(1., 0., 0.), kVeryExact));
 }
 
 class MultilaneLanesParamTest : public ::testing::TestWithParam<double> {
@@ -336,7 +336,7 @@ TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
   EXPECT_TRUE(api::test::IsHBoundsClose(l1->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact));
 
   const api::IsoLaneVelocity lane_velocity(1., 10., 100.);
-  const drake::Vector3<double> lane_velocity_as_vector(lane_velocity.sigma_v, lane_velocity.rho_v, lane_velocity.eta_v);
+  const math::Vector3 lane_velocity_as_vector(lane_velocity.sigma_v, lane_velocity.rho_v, lane_velocity.eta_v);
 
   const std::vector<double> lane_position_s_offsets = {0., 1., l1->length() / 2., l1->length() - 1., l1->length()};
   const std::vector<double> lane_position_r_offsets = {-kHalfWidth, -kHalfWidth + 1., -1.,       0.,
@@ -349,11 +349,11 @@ TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
         // Instantiates lane position with current offsets.
         const api::LanePosition lane_position(s_offset, r_offset, h_offset);
         const math::Vector3 lane_position_srh{lane_position.srh()};
-        const drake::Vector3<double> position_at_srh_drake{
+        const math::Vector3 position_at_srh_drake{
             corkscrew_curve.position_at_srh({lane_position_srh.x(), lane_position_srh.y(), lane_position_srh.z()})};
-        const drake::Vector3<double> orientation_at_srh_drake{
+        const math::Vector3 orientation_at_srh_drake{
             corkscrew_curve.orientation_at_srh({lane_position_srh.x(), lane_position_srh.y(), lane_position_srh.z()})};
-        const drake::Vector3<double> motion_derivative_at_srh_drake{corkscrew_curve.motion_derivative_at_srh(
+        const math::Vector3 motion_derivative_at_srh_drake{corkscrew_curve.motion_derivative_at_srh(
             {lane_position_srh.x(), lane_position_srh.y(), lane_position_srh.z()}, lane_velocity_as_vector)};
         // Checks position in the (x, y, z) frame i.e. world
         // down to kLinearTolerance accuracy (as that's the

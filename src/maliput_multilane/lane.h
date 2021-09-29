@@ -3,7 +3,6 @@
 #include <memory>
 #include <optional>
 
-#include <drake/common/eigen_types.h>
 #include <maliput/api/branch_point.h>
 #include <maliput/api/lane.h>
 #include <maliput/api/segment.h>

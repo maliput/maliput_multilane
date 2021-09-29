@@ -4,13 +4,12 @@
 #include <memory>
 #include <utility>
 
-#include <Eigen/Dense>
-#include <drake/common/eigen_types.h>
-#include <drake/math/rotation_matrix.h>
 #include <drake/systems/analysis/antiderivative_function.h>
 #include <drake/systems/analysis/scalar_initial_value_problem.h>
 #include <maliput/api/lane_data.h>
 #include <maliput/common/maliput_copyable.h>
+#include <maliput/math/roll_pitch_yaw.h>
+#include <maliput/math/vector.h>
 
 #include "maliput_multilane/computation_policy.h"
 #include "maliput_multilane/cubic_polynomial.h"
@@ -18,7 +17,6 @@
 namespace maliput {
 namespace multilane {
 
-// TODO(Mitiguy) Deprecate this class in favor of drake::math::RollPitchYaw.
 /// An R^3 rotation parameterized by roll, pitch, yaw.
 ///
 /// This effects a compound rotation around space-fixed x-y-z axes:
@@ -31,17 +29,14 @@ class Rot3 {
   Rot3(double roll, double pitch, double yaw) : rpy_(roll, pitch, yaw) {}
 
   /// Applies the rotation to a 3-vector.
-  drake::Vector3<double> apply(const drake::Vector3<double>& in) const {
-    const drake::math::RollPitchYaw<double> roll_pitch_yaw(rpy_);
-    return roll_pitch_yaw.ToRotationMatrix() * in;
-  }
+  math::Vector3 apply(const math::Vector3& in) const { return rpy_.ToMatrix() * in; }
 
-  double yaw() const { return rpy_(2); }
-  double pitch() const { return rpy_(1); }
-  double roll() const { return rpy_(0); }
+  double yaw() const { return rpy_.yaw_angle(); }
+  double pitch() const { return rpy_.pitch_angle(); }
+  double roll() const { return rpy_.roll_angle(); }
 
  private:
-  Eigen::Matrix<double, 3, 1, Eigen::DontAlign> rpy_;
+  math::RollPitchYaw rpy_;
 };
 
 // TODO(maddog-tri)  Add support for Lanes with both non-zero r0 and
@@ -135,13 +130,13 @@ class RoadCurve {
   /// Computes the reference curve.
   /// @param p The reference curve parameter.
   /// @return The reference curve itself, F(p).
-  virtual drake::Vector2<double> xy_of_p(double p) const = 0;
+  virtual math::Vector2 xy_of_p(double p) const = 0;
 
   /// Computes the first derivative of the reference curve.
   /// @param p The reference curve parameter.
   /// @return The derivative of the curve with respect to p, at @p p, i.e.,
   /// F'(p0) = (dx/dp, dy/dp) at p0.
-  virtual drake::Vector2<double> xy_dot_of_p(double p) const = 0;
+  virtual math::Vector2 xy_dot_of_p(double p) const = 0;
 
   /// Computes the heading of the reference curve.
   /// @param p The reference curve parameter.
@@ -181,8 +176,8 @@ class RoadCurve {
   /// bounds of the surface mapping.
   /// @return A 3D vector [p, r, h], that represent the domain coordinates of
   /// the world function, that gives as world function output @p inertial_coordinate.
-  virtual drake::Vector3<double> ToCurveFrame(const drake::Vector3<double>& inertial_coordinate, double r_min,
-                                              double r_max, const api::HBounds& height_bounds) const = 0;
+  virtual math::Vector3 ToCurveFrame(const math::Vector3& inertial_coordinate, double r_min, double r_max,
+                                     const api::HBounds& height_bounds) const = 0;
 
   /// Checks that there are no self-intersections (singularities) in the volume
   /// created by applying the constant @p r_min, @p r_max and @p height_bounds
@@ -197,7 +192,7 @@ class RoadCurve {
   virtual bool IsValid(double r_min, double r_max, const api::HBounds& height_bounds) const = 0;
 
   /// Returns W, the world function evaluated at @p p, @p r, @p h.
-  drake::Vector3<double> W_of_prh(double p, double r, double h) const;
+  math::Vector3 W_of_prh(double p, double r, double h) const;
 
   /// Returns W' = ∂W/∂p, the partial differential of W with respect to p,
   /// evaluated at @p p, @p r, @p h.
@@ -206,13 +201,13 @@ class RoadCurve {
   /// avoid recomputing it.)
   /// (@p g_prime must be the result of elevation().f_dot_p(p) --- passed in
   /// here to avoid recomputing it.)
-  drake::Vector3<double> W_prime_of_prh(double p, double r, double h, const Rot3& Rabg, double g_prime) const;
+  math::Vector3 W_prime_of_prh(double p, double r, double h, const Rot3& Rabg, double g_prime) const;
 
   /// Returns the rotation R_αβγ, evaluated at @p p along the reference curve.
-  Rot3 Rabg_of_p(double p) const;
+  math::RollPitchYaw Rabg_of_p(double p) const;
 
   /// Returns the rotation R_αβγ, evaluated at @p p, @p r and @p h.
-  Rot3 Orientation(double p, double r, double h) const;
+  math::RollPitchYaw Orientation(double p, double r, double h) const;
 
   /// Returns the s-axis unit-vector, expressed in the world frame,
   /// of the (s,r,h) `Lane`-frame (with respect to the world frame).
@@ -221,14 +216,14 @@ class RoadCurve {
   /// avoid recomputing it.)
   /// (@p g_prime must be the result of elevation().f_dot_p(p) --- passed in
   /// here to avoid recomputing it.)
-  drake::Vector3<double> s_hat_of_prh(double p, double r, double h, const Rot3& Rabg, double g_prime) const;
+  math::Vector3 s_hat_of_prh(double p, double r, double h, const Rot3& Rabg, double g_prime) const;
 
   /// Returns the r-axis unit-vector, expressed in the world frame,
   /// of the (s,r,h) `Lane`-frame (with respect to the world frame).
   ///
   /// (@p Rabg must be the result of Rabg_of_p(p) --- passed in here to
   /// avoid recomputing it.)
-  drake::Vector3<double> r_hat_of_Rabg(const Rot3& Rabg) const;
+  math::Vector3 r_hat_of_Rabg(const Rot3& Rabg) const;
 
   /// Computes the most appropriate value for the elevation derivative g' at
   /// @p p, that accounts for the limitations of the arc length parameterization

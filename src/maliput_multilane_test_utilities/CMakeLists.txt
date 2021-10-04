@@ -1,6 +1,5 @@
 set(TEST_UTILS_SOURCES
   fixtures.cc
-  multilane_brute_force_integral.cc
   multilane_types_compare.cc)
 
 add_library(test_utilities ${TEST_UTILS_SOURCES})
@@ -26,12 +25,14 @@ target_include_directories(
 )
 
 target_link_libraries(test_utilities
-  drake::drake
-  maliput::api
-  maliput::common
-  maliput::test_utilities
-  maliput::math
-  maliput_multilane
+  PUBLIC
+    maliput::api
+    maliput::common
+    maliput::test_utilities
+    maliput::math
+    maliput_multilane
+  PRIVATE
+    drake::drake
 )
 
 install(

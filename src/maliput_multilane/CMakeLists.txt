@@ -36,12 +36,14 @@ target_include_directories(maliput_multilane
 )
 
 target_link_libraries(maliput_multilane
-  drake::drake
-  maliput::api
-  maliput::base
-  maliput::common
-  maliput::math
-  yaml-cpp
+  PUBLIC
+    maliput::api
+    maliput::base
+    maliput::common
+    maliput::math
+  PRIVATE
+    drake::drake
+    yaml-cpp
 )
 
 ##############################################################################

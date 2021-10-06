@@ -351,10 +351,10 @@ class RoadCurve {
   double relative_tolerance_;
   // The inverse arc length IVP, or the parameter p as a function of the
   // arc length s.
-  std::unique_ptr<drake::systems::ScalarInitialValueProblem<double>> p_from_s_ivp_;
+  std::unique_ptr<maliput::drake::systems::ScalarInitialValueProblem<double>> p_from_s_ivp_;
   // The arc length function, or the arc length s as a function of the
   // parameter p.
-  std::unique_ptr<drake::systems::AntiderivativeFunction<double>> s_from_p_func_;
+  std::unique_ptr<maliput::drake::systems::AntiderivativeFunction<double>> s_from_p_func_;
 };
 
 }  // namespace multilane

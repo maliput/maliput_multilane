@@ -100,13 +100,13 @@ math::Vector3 ArcRoadCurve::ToCurveFrame(const math::Vector3& geo_coordinate, do
   // Compute r (its direction depends on the direction of the +s-coordinate)
   const double r_unsaturated = (d_theta_ >= 0.) ? radius_ - v.norm() : v.norm() - radius_;
   // Saturate r within segment bounds.
-  const double r = drake::math::saturate(r_unsaturated, r_min, r_max);
+  const double r = maliput::drake::math::saturate(r_unsaturated, r_min, r_max);
 
   // Calculate the (uniform) road elevation.
   // N.B. h is the geo z-coordinate referenced against the lane elevation (whose
   // `a` coefficient is normalized by lane length).
   const double h_unsaturated = geo_coordinate.z() - elevation().a() * l_max();
-  const double h = drake::math::saturate(h_unsaturated, height_bounds.min(), height_bounds.max());
+  const double h = maliput::drake::math::saturate(h_unsaturated, height_bounds.min(), height_bounds.max());
   return math::Vector3(p, r, h);
 }
 

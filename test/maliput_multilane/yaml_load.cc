@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-#include <drake/common/text_logging.h>
+#include <maliput/drake/common/text_logging.h>
 #include <gflags/gflags.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/common/logger.h>

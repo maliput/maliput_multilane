@@ -1,6 +1,6 @@
 #include "maliput_multilane/line_road_curve.h"
 
-#include <drake/math/saturate.h>
+#include <maliput/drake/math/saturate.h>
 
 namespace maliput {
 namespace multilane {

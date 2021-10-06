@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <memory>
 
-#include <drake/common/eigen_types.h>
-#include <drake/systems/analysis/integrator_base.h>
-#include <drake/systems/analysis/scalar_dense_output.h>
+#include <maliput/drake/common/eigen_types.h>
+#include <maliput/drake/systems/analysis/integrator_base.h>
+#include <maliput/drake/systems/analysis/scalar_dense_output.h>
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_throw.h>
 #include <maliput/common/maliput_unused.h>

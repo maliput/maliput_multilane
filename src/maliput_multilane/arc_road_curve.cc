@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <limits>
 
-#include <maliput/drake/math/saturate.h>
 #include <maliput/common/maliput_abort.h>
+#include <maliput/drake/math/saturate.h>
 
 namespace maliput {
 namespace multilane {

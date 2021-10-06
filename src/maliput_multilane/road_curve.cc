@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <memory>
 
-#include <maliput/drake/common/eigen_types.h>
-#include <maliput/drake/systems/analysis/integrator_base.h>
-#include <maliput/drake/systems/analysis/scalar_dense_output.h>
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_throw.h>
 #include <maliput/common/maliput_unused.h>
+#include <maliput/drake/common/eigen_types.h>
+#include <maliput/drake/systems/analysis/integrator_base.h>
+#include <maliput/drake/systems/analysis/scalar_dense_output.h>
 
 namespace maliput {
 namespace multilane {
@@ -103,13 +103,13 @@ RoadCurve::RoadCurve(double linear_tolerance, double scale_length, const CubicPo
   // Instantiates s(p) and p(s) mappings with default values.
   const maliput::drake::systems::AntiderivativeFunction<double>::IntegrableFunctionContext s_from_p_func_values(
       initial_p_value, default_parameters);
-  s_from_p_func_ = std::make_unique<maliput::drake::systems::AntiderivativeFunction<double>>(ArcLengthDerivativeFunction(this),
-                                                                                    s_from_p_func_values);
+  s_from_p_func_ = std::make_unique<maliput::drake::systems::AntiderivativeFunction<double>>(
+      ArcLengthDerivativeFunction(this), s_from_p_func_values);
 
   const maliput::drake::systems::ScalarInitialValueProblem<double>::ScalarOdeContext p_from_s_ivp_values(
       initial_s_value, initial_p_value, default_parameters);
-  p_from_s_ivp_ = std::make_unique<maliput::drake::systems::ScalarInitialValueProblem<double>>(InverseArcLengthODEFunction(this),
-                                                                                      p_from_s_ivp_values);
+  p_from_s_ivp_ = std::make_unique<maliput::drake::systems::ScalarInitialValueProblem<double>>(
+      InverseArcLengthODEFunction(this), p_from_s_ivp_values);
 
   // Relative tolerance in path length is roughly bounded by e/L, where e is
   // the linear tolerance and L is the scale length. This can be seen by

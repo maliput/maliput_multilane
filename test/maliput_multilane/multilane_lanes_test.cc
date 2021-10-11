@@ -269,11 +269,11 @@ math::Vector3 CorkScrew::orientation_at_srh(const math::Vector3& srh) const {
                             angular_length_ * (effective_r_offset * cgamma - srh[2] * sgamma));
   const math::Vector3 s_hat = s_vec.normalized();
   const math::Vector3 r_hat(0., cgamma, sgamma);
-  // TODO(hidmic): Make use of drake::math::RollPitchYaw:
+  // TODO(hidmic): Make use of maliput::drake::math::RollPitchYaw:
   //
-  // drake::Matrix3<T> rotmat;
+  // maliput::drake::Matrix3<T> rotmat;
   // rotmat << s_hat, r_hat, s_hat.cross(r_hat);
-  // return drake::math::RollPitchYaw<T>(drake::math::RotationMatrix<T>(rotmat)).vector();
+  // return maliput::drake::math::RollPitchYaw<T>(maliput::drake::math::RotationMatrix<T>(rotmat)).vector();
   //
   // Code below is a verbatim partial transcription of the
   // RoadCurve::Orientation() method implementation that, somehow, gives a

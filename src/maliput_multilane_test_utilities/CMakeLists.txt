@@ -32,7 +32,11 @@ target_link_libraries(test_utilities
     maliput::math
     maliput_multilane
   PRIVATE
-    drake::drake
+    maliput_drake::analysis
+    maliput_drake::common
+    maliput_drake::framework
+    maliput_drake::math
+    maliput_drake::trajectories
 )
 
 install(

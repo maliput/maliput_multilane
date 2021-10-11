@@ -1,6 +1,6 @@
 #include "maliput_multilane/line_road_curve.h"
 
-#include <drake/math/saturate.h>
+#include <maliput/drake/math/saturate.h>
 
 namespace maliput {
 namespace multilane {
@@ -30,13 +30,13 @@ math::Vector3 LineRoadCurve::ToCurveFrame(const math::Vector3& geo_coordinate, d
 
   // Compute the distance from `q` to the start of the lane.
   const double p_unsaturated = lane_origin_to_q.dot(s_unit_vector) / l_max();
-  const double p = drake::math::saturate(p_unsaturated, 0., 1.);
+  const double p = maliput::drake::math::saturate(p_unsaturated, 0., 1.);
   const double r_unsaturated = lane_origin_to_q.dot(r_unit_vector);
-  const double r = drake::math::saturate(r_unsaturated, r_min, r_max);
+  const double r = maliput::drake::math::saturate(r_unsaturated, r_min, r_max);
   // N.B. h is the geo z-coordinate referenced against the lane elevation (whose
   // `a` coefficient is normalized by lane length).
   const double h_unsaturated = geo_coordinate.z() - elevation().a() * l_max();
-  const double h = drake::math::saturate(h_unsaturated, height_bounds.min(), height_bounds.max());
+  const double h = maliput::drake::math::saturate(h_unsaturated, height_bounds.min(), height_bounds.max());
   return math::Vector3(p, r, h);
 }
 

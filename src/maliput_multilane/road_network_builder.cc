@@ -75,10 +75,10 @@ std::unique_ptr<api::RoadNetwork> BuildRoadNetwork(const RoadNetworkConfiguratio
                                 : std::make_unique<TrafficLightBook>();
   auto phase_ring_book = IsPhaseRingsNodeDefined(yaml_root_node)
                              ? (!road_network_configuration.yaml_file.empty()
-                                    ? LoadPhaseRingBookFromFile(rulebook.get(), traffic_light_book.get(),
-                                                                road_network_configuration.yaml_file)
-                                    : LoadPhaseRingBook(rulebook.get(), traffic_light_book.get(),
-                                                        road_network_configuration.yaml_description))
+                                    ? LoadPhaseRingBookFromFileOldRules(rulebook.get(), traffic_light_book.get(),
+                                                                        road_network_configuration.yaml_file)
+                                    : LoadPhaseRingBookOldRules(rulebook.get(), traffic_light_book.get(),
+                                                                road_network_configuration.yaml_description))
                              : std::make_unique<ManualPhaseRingBook>();
   std::unique_ptr<ManualPhaseProvider> phase_provider = std::make_unique<ManualPhaseProvider>();
   auto intersection_book = IsIntersectionsNodeDefined(yaml_root_node)

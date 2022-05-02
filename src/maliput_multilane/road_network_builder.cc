@@ -84,10 +84,10 @@ std::unique_ptr<api::RoadNetwork> BuildRoadNetwork(const RoadNetworkConfiguratio
   auto intersection_book = IsIntersectionsNodeDefined(yaml_root_node)
                                ? (!road_network_configuration.yaml_file.empty()
                                       ? LoadIntersectionBookFromFile(road_network_configuration.yaml_file, *rulebook,
-                                                                     *phase_ring_book, phase_provider.get())
+                                                                     *phase_ring_book, rg.get(), phase_provider.get())
                                       : LoadIntersectionBook(road_network_configuration.yaml_file, *rulebook,
-                                                             *phase_ring_book, phase_provider.get()))
-                               : std::make_unique<IntersectionBook>();
+                                                             *phase_ring_book, rg.get(), phase_provider.get()))
+                               : std::make_unique<IntersectionBook>(rg.get());
   std::unique_ptr<api::rules::RuleRegistry> rule_registry = std::make_unique<api::rules::RuleRegistry>();
 
   std::unique_ptr<ManualRightOfWayRuleStateProvider> right_of_way_rule_state_provider =
@@ -112,7 +112,7 @@ std::unique_ptr<api::RoadNetwork> BuildOnRampMergeRoadNetwork(
   auto phase_ring_book = std::make_unique<ManualPhaseRingBook>();
   auto result = std::make_unique<ManualPhaseRingBook>();
   auto phase_provider = std::make_unique<ManualPhaseProvider>();
-  auto intersection_book = std::make_unique<IntersectionBook>();
+  auto intersection_book = std::make_unique<IntersectionBook>(rg.get());
   std::unique_ptr<api::rules::RuleRegistry> rule_registry = std::make_unique<api::rules::RuleRegistry>();
 
   std::unique_ptr<ManualRightOfWayRuleStateProvider> right_of_way_rule_state_provider =

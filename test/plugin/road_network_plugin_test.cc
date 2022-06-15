@@ -48,9 +48,12 @@ namespace {
 class RoadNetworkLoaderTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    ASSERT_TRUE(!env_path_.empty());
+    setenv("MALIPUT_PLUGIN_PATH", DEF_ROAD_NETWORK_PLUGIN, 1);
+
+    ASSERT_TRUE(!resource_path_.empty());
+    manager_ = std::make_unique<maliput::plugin::MaliputPluginManager>();
     // Check MaliputPlugin existence.
-    const plugin::MaliputPlugin* rn_plugin{manager_.GetPlugin(kMultilanePluginId)};
+    const plugin::MaliputPlugin* rn_plugin{manager_->GetPlugin(kMultilanePluginId)};
     ASSERT_NE(nullptr, rn_plugin);
 
     // Check multilane plugin is obtained.
@@ -72,12 +75,10 @@ class RoadNetworkLoaderTest : public ::testing::Test {
     ASSERT_NE(nullptr, multilane_rg);
   }
 
-  const std::string MULTILANE_RESOURCE_ROOT{"MULTILANE_RESOURCE_ROOT"};
   // RoadNetworkLoader plugin id.
   const plugin::MaliputPlugin::Id kMultilanePluginId{"maliput_multilane"};
-
-  const std::string env_path_ = maliput::common::Filesystem::get_env_path(MULTILANE_RESOURCE_ROOT);
-  maliput::plugin::MaliputPluginManager manager_{};
+  const std::string resource_path_{DEF_MULTILANE_RESOURCE_ROOT};
+  std::unique_ptr<maliput::plugin::MaliputPluginManager> manager_;
   std::unique_ptr<maliput::plugin::RoadNetworkLoader> rn_loader_{nullptr};
 };
 
@@ -87,7 +88,7 @@ TEST_F(RoadNetworkLoaderTest, UsingYamlFile) {
   const std::string kFileName{"/2x2_intersection.yaml"};
   // Multilane properties.
   const std::map<std::string, std::string> rg_multilane_properties{{"road_network_source", "yaml"},
-                                                                   {"yaml_file", env_path_ + kFileName}};
+                                                                   {"yaml_file", resource_path_ + kFileName}};
   CheckMultilaneRoadNetworkIsConstructible(rg_multilane_properties);
 }
 

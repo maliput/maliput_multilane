@@ -64,15 +64,14 @@ constexpr double kLaneWidth{3.75};
 constexpr double kHalfLaneWidth{kLaneWidth / 2.0};
 constexpr double kApproachLength{50.0};
 constexpr double kIntersectionWidth{kEntryDistance * 2.0};
-constexpr char MULTILANE_RESOURCE_VAR[] = "MULTILANE_RESOURCE_ROOT";
 
 class Test2x2Intersection : public ::testing::Test {
  protected:
   virtual void SetUp() {
     static const char* const kFileName = "/2x2_intersection.yaml";
-    const std::string env_path = maliput::common::Filesystem::get_env_path(MULTILANE_RESOURCE_VAR);
-    EXPECT_TRUE(!env_path.empty());
-    dut_ = LoadFile(multilane::BuilderFactory(), env_path + kFileName);
+    const std::string resource_path = DEF_MULTILANE_RESOURCE_ROOT;
+    ASSERT_TRUE(!resource_path.empty());
+    dut_ = LoadFile(multilane::BuilderFactory(), resource_path + kFileName);
   }
 
   std::unique_ptr<const RoadGeometry> dut_;

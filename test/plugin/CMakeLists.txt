@@ -17,6 +17,14 @@ macro(add_dependencies_to_test target)
           ENABLE_EXPORTS ON
       )
 
+      set(MULTILANE_RESOURCE_ROOT ${PROJECT_SOURCE_DIR}/resources/)
+      set(ROAD_NETWORK_PLUGIN ${CMAKE_INSTALL_PREFIX}/lib/plugins/)
+      target_compile_definitions(${target}
+        PRIVATE
+          DEF_MULTILANE_RESOURCE_ROOT="${MULTILANE_RESOURCE_ROOT}"
+          DEF_ROAD_NETWORK_PLUGIN="${ROAD_NETWORK_PLUGIN}"
+      )
+
       target_link_libraries(${target}
           maliput_multilane::maliput_multilane
           maliput::common

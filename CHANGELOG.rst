@@ -2,8 +2,8 @@
 Changelog for package maliput_multilane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2022-06-16)
+------------------
 * Updates package.xml.
 * Suppresses old-rule-api-related warnings. (`#88 <https://github.com/ToyotaResearchInstitute/maliput_multilane/issues/88>`_)
 * Fixes include folder installation. (`#87 <https://github.com/ToyotaResearchInstitute/maliput_multilane/issues/87>`_)

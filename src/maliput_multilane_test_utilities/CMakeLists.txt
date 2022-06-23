@@ -1,3 +1,8 @@
+if(BUILD_TESTING)
+
+find_package(ament_cmake_gmock REQUIRED)
+ament_find_gmock()
+
 set(TEST_UTILS_SOURCES
   fixtures.cc
   multilane_types_compare.cc)
@@ -11,17 +16,19 @@ set_target_properties(test_utilities
     OUTPUT_NAME maliput_multilane_test_utilities
 )
 
-find_package(ament_cmake_gmock REQUIRED)
-
-ament_find_gmock()
-
 target_include_directories(
   test_utilities
   PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
   PRIVATE
-    ${GMOCK_INCLUDE_DIRS}
+  ${GMOCK_INCLUDE_DIRS}
+  )
+
+set(MULTILANE_RESOURCE_ROOT ${PROJECT_SOURCE_DIR}/resources/)
+target_compile_definitions(test_utilities
+  PRIVATE
+    DEF_MULTILANE_RESOURCE_ROOT="${MULTILANE_RESOURCE_ROOT}"
 )
 
 target_link_libraries(test_utilities
@@ -46,3 +53,5 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+endif()

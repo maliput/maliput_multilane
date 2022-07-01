@@ -2,6 +2,12 @@
 Changelog for package maliput_multilane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixes environment hooks. (`#90 <https://github.com/maliput/maliput_multilane/issues/90>`_)
+* Fixes dependency on environment variables. (`#89 <https://github.com/maliput/maliput_multilane/issues/89>`_)
+* Contributors: Franco Cipollone
+
 0.1.0 (2022-06-16)
 ------------------
 * Updates package.xml.

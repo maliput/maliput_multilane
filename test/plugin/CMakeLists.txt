@@ -18,7 +18,7 @@ macro(add_dependencies_to_test target)
       )
 
       set(MULTILANE_RESOURCE_ROOT ${PROJECT_SOURCE_DIR}/resources/)
-      set(ROAD_NETWORK_PLUGIN ${CMAKE_INSTALL_PREFIX}/lib/plugins/)
+      set(ROAD_NETWORK_PLUGIN ${CMAKE_INSTALL_PREFIX}/lib/maliput_plugins/)
       target_compile_definitions(${target}
         PRIVATE
           DEF_MULTILANE_RESOURCE_ROOT="${MULTILANE_RESOURCE_ROOT}"

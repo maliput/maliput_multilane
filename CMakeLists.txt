@@ -67,7 +67,8 @@ endif()
 # Export
 ##############################################################################
 
-ament_environment_hooks(setup.sh.in)
+ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.dsv.in")
+ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/${PROJECT_NAME}.sh.in")
 
 install(
   DIRECTORY include/

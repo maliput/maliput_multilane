@@ -10,32 +10,6 @@ ament_add_gmock(multilane_builder_test multilane_builder_test.cc)
 ament_add_gmock(multilane_connection_test multilane_connection_test.cc)
 ament_add_gmock(multilane_loader_test multilane_loader_test.cc)
 
-macro(add_dependencies_to_test target)
-    if (TARGET ${target})
-
-      target_include_directories(${target}
-        PRIVATE
-          ${PROJECT_SOURCE_DIR}/include
-      )
-
-      set(MULTILANE_RESOURCE_ROOT ${PROJECT_SOURCE_DIR}/resources/)
-      target_compile_definitions(${target}
-        PRIVATE
-          DEF_MULTILANE_RESOURCE_ROOT="${MULTILANE_RESOURCE_ROOT}"
-      )
-
-      target_link_libraries(${target}
-          maliput::api
-          maliput::common
-          maliput::math
-          maliput_drake::common
-          maliput_multilane::maliput_multilane
-          maliput_multilane::test_utilities
-      )
-
-    endif()
-endmacro()
-
 add_dependencies_to_test(2x2_intersection_test)
 add_dependencies_to_test(multilane_arc_road_curve_test)
 add_dependencies_to_test(multilane_builder_test)

@@ -1,7 +1,7 @@
 // BSD 3-Clause License
 //
-// Copyright (c) 2022, Woven Planet. All rights reserved.
-// Copyright (c) 2019-2022, Toyota Research Institute. All rights reserved.
+// Copyright (c) 2022, Woven Planet.
+// All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -29,40 +29,32 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "maliput_multilane_test_utilities/fixtures.h"
 
-#include <limits>
-#include <string>
-
-#include <maliput/api/lane.h>
-#include <maliput/common/filesystem.h>
-
-#include "maliput_multilane/builder.h"
-#include "maliput_multilane/loader.h"
-
-using maliput::api::LaneId;
-using maliput::multilane::BuilderFactory;
-using maliput::multilane::LoadFile;
-
 namespace maliput {
 namespace multilane {
+namespace test {
 
-constexpr char MULTILANE_RESOURCE_VAR[] = "MULTILANE_RESOURCE_ROOT";
+namespace {
 
-BranchAndMergeBasedTest::BranchAndMergeBasedTest()
-    : road_geometry_(LoadFile(BuilderFactory(), maliput::common::Filesystem::get_env_path(MULTILANE_RESOURCE_VAR) +
-                                                    "/branch_and_merge.yaml")),
-      index_(road_geometry_->ById()),
-      total_length_(index_.GetLane(LaneId("l:1.1_0"))->length() + index_.GetLane(LaneId("l:1.2_0"))->length() +
-                    index_.GetLane(LaneId("l:1.3_0"))->length()) {}
+class TestBranchAndMergeBasedTest : public BranchAndMergeBasedTest {};
 
-LoopBasedTest::LoopBasedTest()
-    : road_geometry_(
-          LoadFile(BuilderFactory(), maliput::common::Filesystem::get_env_path(MULTILANE_RESOURCE_VAR) + "/loop.yaml")),
-      index_(road_geometry_->ById()) {}
+class TestLoopBasedTest : public LoopBasedTest {};
 
-MultiBranchBasedTest::MultiBranchBasedTest()
-    : road_geometry_(LoadFile(
-          BuilderFactory(), maliput::common::Filesystem::get_env_path(MULTILANE_RESOURCE_VAR) + "/multi_branch.yaml")),
-      index_(road_geometry_->ById()) {}
+class TestMultiBranchBasedTest : public MultiBranchBasedTest {};
 
+}  // namespace
+
+TEST_F(TestBranchAndMergeBasedTest, smoke_test) {
+  // This test is a smoke test to validate the test fixture constructor.
+}
+
+TEST_F(TestLoopBasedTest, smoke_test) {
+  // This test is a smoke test to validate the test fixture constructor.
+}
+
+TEST_F(TestMultiBranchBasedTest, smoke_test) {
+ // This test is a smoke test to validate the test fixture constructor.
+}
+
+}  // namespace test
 }  // namespace multilane
 }  // namespace maliput

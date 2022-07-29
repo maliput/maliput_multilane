@@ -25,12 +25,6 @@ target_include_directories(
   ${GMOCK_INCLUDE_DIRS}
   )
 
-set(MULTILANE_RESOURCE_ROOT ${PROJECT_SOURCE_DIR}/resources/)
-target_compile_definitions(test_utilities
-  PRIVATE
-    DEF_MULTILANE_RESOURCE_ROOT="${MULTILANE_RESOURCE_ROOT}"
-)
-
 target_link_libraries(test_utilities
   PUBLIC
     maliput::api

@@ -2,6 +2,13 @@
 Changelog for package maliput_multilane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixes test utilities (`#93 <https://github.com/maliput/maliput_multilane/issues/93>`_)
+* Adds triage workflow. (`#92 <https://github.com/maliput/maliput_multilane/issues/92>`_)
+* Improves README. (`#91 <https://github.com/maliput/maliput_multilane/issues/91>`_)
+* Contributors: Franco Cipollone
+
 0.1.1 (2022-07-01)
 ------------------
 * Fixes environment hooks. (`#90 <https://github.com/maliput/maliput_multilane/issues/90>`_)

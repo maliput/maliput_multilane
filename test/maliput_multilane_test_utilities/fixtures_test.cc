@@ -44,15 +44,15 @@ class TestMultiBranchBasedTest : public MultiBranchBasedTest {};
 }  // namespace
 
 TEST_F(TestBranchAndMergeBasedTest, smoke_test) {
-  // This test is a smoke test for the fixture.
+  // This test is a smoke test to validate the test fixture constructor.
 }
 
 TEST_F(TestLoopBasedTest, smoke_test) {
-  // This test is a smoke test for the fixture.
+  // This test is a smoke test to validate the test fixture constructor.
 }
 
 TEST_F(TestMultiBranchBasedTest, smoke_test) {
-  // This test is a smoke test for the fixture.
+ // This test is a smoke test to validate the test fixture constructor.
 }
 
 }  // namespace test

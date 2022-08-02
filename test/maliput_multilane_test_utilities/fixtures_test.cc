@@ -52,7 +52,7 @@ TEST_F(TestLoopBasedTest, smoke_test) {
 }
 
 TEST_F(TestMultiBranchBasedTest, smoke_test) {
- // This test is a smoke test to validate the test fixture constructor.
+  // This test is a smoke test to validate the test fixture constructor.
 }
 
 }  // namespace test

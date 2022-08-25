@@ -100,11 +100,20 @@ api::LanePosition Lane::DoEvalMotionDerivatives(const api::LanePosition& positio
 }
 
 api::LanePositionResult Lane::DoToLanePosition(const api::InertialPosition& inertial_position) const {
+  return InertialToLaneSegmentPositionBackend(inertial_position, true);
+}
+
+api::LanePositionResult Lane::DoToSegmentPosition(const api::InertialPosition& inertial_position) const {
+  return InertialToLaneSegmentPositionBackend(inertial_position, false);
+}
+
+api::LanePositionResult Lane::InertialToLaneSegmentPositionBackend(const api::InertialPosition& inertial_position,
+                                                                   bool use_lane_boundaries) const {
   // Computes the lateral extents of the surface in terms of the definition of
-  // the reference curve. It implies a translation of the segment bounds
+  // the reference curve. It implies a translation of the lane bounds
   // center by the lane by r0 distance.
-  const double r_min = segment_bounds_.min() + r0_;
-  const double r_max = segment_bounds_.max() + r0_;
+  const double r_min = (use_lane_boundaries ? lane_bounds_.min() : segment_bounds_.min()) + r0_;
+  const double r_max = (use_lane_boundaries ? lane_bounds_.max() : segment_bounds_.max()) + r0_;
   // Lane position is over the segment's road curve frame, so a change is
   // needed. That implies getting the path length s from p and translating the r
   // coordinate because of the offset.

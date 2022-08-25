@@ -156,6 +156,11 @@ class Lane : public api::Lane {
 
   api::LanePositionResult DoToLanePosition(const api::InertialPosition& inertial_position) const override;
 
+  api::LanePositionResult DoToSegmentPosition(const api::InertialPosition& inertial_position) const override;
+
+  api::LanePositionResult InertialToLaneSegmentPositionBackend(const api::InertialPosition& inertial_position,
+                                                               bool use_lane_boundaries) const;
+
   const api::LaneId id_;
   const api::Segment* segment_{};
   const int index_{};

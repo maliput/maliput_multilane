@@ -126,34 +126,56 @@ TEST_P(MultilaneLanesParamTest, FlatLineLane) {
       l1->ToInertialPosition({l1->length(), 0., 0.}),
       api::InertialPosition(200. + r_offset_vector.x(), -25. + r_offset_vector.y(), 0. + r_offset_vector.z()),
       kLinearTolerance));
-  // Case 1: Tests LineLane::ToLanePosition() with a closest point that lies
+  // Case 1: Tests LineLane::ToSegmentPosition() and LineLane::ToLanePosition() with a closest point that lies
   // within the lane bounds.
-  const api::InertialPosition point_within_lane{148., -46., 0.};
+  const api::InertialPosition point_within_lane{150., -50., 0.};
   const math::Vector3 d_point_lane_origin = point_within_lane.xyz() - math::Vector3(100., -75., 0.) - r_offset_vector;
   const double expected_s = d_point_lane_origin.dot(s_vector);
   const double expected_r = d_point_lane_origin.dot(r_vector);
 
-  api::LanePositionResult result = l1->ToLanePosition(point_within_lane);
+  // ToSegmentPosition
+  api::LanePositionResult result = l1->ToSegmentPosition(point_within_lane);
   EXPECT_TRUE(
       api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, api::InertialPosition(148., -46., 0.),
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, api::InertialPosition(150., -50., 0.),
                                                  kLinearTolerance));
   EXPECT_NEAR(result.distance, 0., kVeryExact);
 
-  // Case 2: Tests LineLane::ToLanePosition() with a closest point that lies
-  // outside of the lane bounds, verifying that the result saturates.
+  // ToLanePosition
+  result = l1->ToLanePosition(point_within_lane);
+  EXPECT_TRUE(
+      api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, api::InertialPosition(150., -50., 0.),
+                                                 kLinearTolerance));
+  EXPECT_NEAR(result.distance, 0., kVeryExact);
+
+  // Case 2: Tests LineLane::ToSegmentPosition() with a closest point that lies
+  // outside of the segment bounds, verifying that the result saturates.
   const api::InertialPosition point_outside_lane{-75., 25., 20.};
-  const double expected_r_outside = kHalfWidth;
+  const double expected_r_outside_segment = kHalfWidth;
+
+  // ToSegmentPosition
+  result = l1->ToSegmentPosition(point_outside_lane);
+  EXPECT_TRUE(api::test::IsLanePositionClose(
+      result.lane_position, api::LanePosition(0., expected_r_outside_segment, kMaxHeight), kVeryExact));
+  const math::Vector3 extreme_segment_point = math::Vector3(100., -75, 0.0) + r_offset_vector +
+                                              kHalfWidth * r_vector.normalized() + math::Vector3(0., 0., kMaxHeight);
+  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position,
+                                                 api::InertialPosition::FromXyz(extreme_segment_point), kVeryExact));
+  EXPECT_NEAR(result.distance, (point_outside_lane.xyz() - extreme_segment_point).norm(), kVeryExact);
+
+  // ToLanePosition
+  const double expected_r_outside_lane = kHalfLaneWidth;
   result = l1->ToLanePosition(point_outside_lane);
   EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
-                                             api::LanePosition(0., expected_r_outside, kMaxHeight), kVeryExact));
+                                             api::LanePosition(0., expected_r_outside_lane, kMaxHeight), kVeryExact));
   const math::Vector3 extreme_lane_point = math::Vector3(100., -75, 0.0) + r_offset_vector +
-                                           kHalfWidth * r_vector.normalized() + math::Vector3(0., 0., kMaxHeight);
+                                           kHalfLaneWidth * r_vector.normalized() + math::Vector3(0., 0., kMaxHeight);
   EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position,
                                                  api::InertialPosition::FromXyz(extreme_lane_point), kVeryExact));
   EXPECT_NEAR(result.distance, (point_outside_lane.xyz() - extreme_lane_point).norm(), kVeryExact);
 
-  // Case 3: Tests LineLane::ToLanePosition() at a non-zero but flat elevation.
+  // Case 3: Tests LineLane::ToSegmentPosition() at a non-zero but flat elevation.
   const double elevation = 10.;
   const double length = std::sqrt(std::pow(100, 2.) + std::pow(50, 2.));
   std::unique_ptr<RoadCurve> road_curve_2 = std::make_unique<LineRoadCurve>(
@@ -164,14 +186,14 @@ TEST_P(MultilaneLanesParamTest, FlatLineLane) {
                                  {0., kMaxHeight});
   Lane* l1_with_z = s2->NewLane(api::LaneId{"l1_with_z"}, r0, {-kHalfLaneWidth, kHalfLaneWidth});
 
-  result = l1_with_z->ToLanePosition(point_outside_lane);
-  EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
-                                             api::LanePosition(0., expected_r_outside, kMaxHeight), kVeryExact));
+  result = l1_with_z->ToSegmentPosition(point_outside_lane);
+  EXPECT_TRUE(api::test::IsLanePositionClose(
+      result.lane_position, api::LanePosition(0., expected_r_outside_segment, kMaxHeight), kVeryExact));
   EXPECT_TRUE(api::test::IsInertialPositionClose(
-      result.nearest_position, api::InertialPosition::FromXyz(extreme_lane_point + math::Vector3(0., 0., elevation)),
+      result.nearest_position, api::InertialPosition::FromXyz(extreme_segment_point + math::Vector3(0., 0., elevation)),
       kVeryExact));
   EXPECT_NEAR(result.distance,
-              (point_outside_lane.xyz() - extreme_lane_point - math::Vector3(0., 0., elevation)).norm(), kVeryExact);
+              (point_outside_lane.xyz() - extreme_segment_point - math::Vector3(0., 0., elevation)).norm(), kVeryExact);
 
   // Verifies the output of LineLane::GetOrientation().
   EXPECT_TRUE(api::test::IsRotationClose(l1->GetOrientation({0., 0., 0.}),
@@ -468,12 +490,12 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
                                                                      offset_radius * std::sin(theta0 + d_theta), 0.0)),
       kLinearTolerance));
 
-  // Case 1: Tests ArcLane::ToLanePosition() with a closest point that lies
+  // Case 1: Tests ArcLane::ToSegmentPosition() with a closest point that lies
   // within the lane bounds.
   const api::InertialPosition point_within_lane{center[0] - 50., center[1] + 50., 0.};  // θ = 0.5π.
   const double expected_s = 0.5 * M_PI / d_theta * l2->length();
   const double expected_r = std::min(offset_radius - std::sqrt(2) * 50., kHalfWidth);
-  api::LanePositionResult result = l2->ToLanePosition(point_within_lane);
+  api::LanePositionResult result = l2->ToSegmentPosition(point_within_lane);
   EXPECT_TRUE(
       api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
   EXPECT_TRUE(api::test::IsInertialPositionClose(
@@ -485,11 +507,11 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
   EXPECT_NEAR(result.distance, (offset_radius - kHalfWidth) - std::sqrt(std::pow(50., 2.) + std::pow(50., 2.)),
               kVeryExact);
 
-  // Case 2: Tests ArcLane::ToLanePosition() with a closest point that lies
+  // Case 2: Tests ArcLane::ToSegmentPosition() with a closest point that lies
   // outside of the lane bounds, verifying that the result saturates.
   const api::InertialPosition point_outside_lane{center[0] + 200., center[1] - 20., 20.};  // θ ~= 1.9π.
   const double expected_r_outside = -kHalfWidth;
-  result = l2->ToLanePosition(point_outside_lane);
+  result = l2->ToSegmentPosition(point_outside_lane);
   EXPECT_TRUE(api::test::IsLanePositionClose(
       result.lane_position, api::LanePosition(l2->length(), expected_r_outside, kMaxHeight), kVeryExact));
   EXPECT_TRUE(api::test::IsInertialPositionClose(
@@ -500,7 +522,7 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
       kVeryExact));
   EXPECT_DOUBLE_EQ(result.distance, (result.nearest_position.xyz() - point_outside_lane.xyz()).norm());
 
-  // Case 3: Tests ArcLane::ToLanePosition() at a non-zero but flat elevation.
+  // Case 3: Tests ArcLane::ToSegmentPosition() at a non-zero but flat elevation.
   const double elevation = 10.;
   std::unique_ptr<RoadCurve> road_curve_2 = std::make_unique<ArcRoadCurve>(
       center, radius, theta0, d_theta, CubicPolynomial(elevation / radius / d_theta, 0.0, 0.0, 0.0), zp,
@@ -509,7 +531,7 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
                     ->NewSegment(api::SegmentId{"s2"}, std::move(road_curve_2), -kHalfWidth + r0, kHalfWidth + r0,
                                  {0., kMaxHeight});
   Lane* l2_with_z = s2->NewLane(api::LaneId{"l2_with_z"}, r0, {-kHalfLaneWidth, kHalfLaneWidth});
-  result = l2_with_z->ToLanePosition(point_outside_lane);
+  result = l2_with_z->ToSegmentPosition(point_outside_lane);
   EXPECT_TRUE(api::test::IsLanePositionClose(
       result.lane_position, api::LanePosition(l2_with_z->length(), expected_r_outside, kMaxHeight), kVeryExact));
   EXPECT_TRUE(api::test::IsInertialPositionClose(
@@ -521,7 +543,7 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
       kVeryExact));
   EXPECT_DOUBLE_EQ(result.distance, (result.nearest_position.xyz() - point_outside_lane.xyz()).norm());
 
-  // Case 4: Tests ArcLane::ToLanePosition() with a lane that overlaps itself.
+  // Case 4: Tests ArcLane::ToSegmentPosition() with a lane that overlaps itself.
   // The result should be identical to Case 1.
   const double d_theta_overlap = 3 * M_PI;
   std::unique_ptr<RoadCurve> road_curve_3 = std::make_unique<ArcRoadCurve>(
@@ -530,7 +552,7 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
                     ->NewSegment(api::SegmentId{"s3"}, std::move(road_curve_3), -kHalfWidth + r0, kHalfWidth + r0,
                                  {0., kMaxHeight});
   Lane* l2_overlapping = s3->NewLane(api::LaneId{"l2_overlapping"}, r0, {-kHalfLaneWidth, kHalfLaneWidth});
-  result = l2_overlapping->ToLanePosition(point_within_lane);
+  result = l2_overlapping->ToSegmentPosition(point_within_lane);
   EXPECT_TRUE(
       api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
   EXPECT_TRUE(api::test::IsInertialPositionClose(
@@ -860,7 +882,7 @@ TEST_F(MultilaneMultipleLanesTest, MultipleLineLanes) {
         const api::InertialPosition inertial_point = api::InertialPosition::FromXyz(
             math::Vector3(100., -75., 0.) + (p * lane_length) * s_vector + (kR0 + lane_spacing + r) * r_vector);
 
-        const api::LanePositionResult result = lane->ToLanePosition(inertial_point);
+        const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
         EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position, api::LanePosition(p * lane_length, r, 0.),
                                                    kVeryExact));
         EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, inertial_point, kVeryExact));
@@ -878,7 +900,7 @@ TEST_F(MultilaneMultipleLanesTest, MultipleLineLanes) {
       const api::InertialPosition inertial_point =
           api::InertialPosition::FromXyz(math::Vector3(100., -75., 0.) + (p * lane_length) * s_vector);
       const double expected_r = lane->segment_bounds(0.).min();
-      const api::LanePositionResult result = lane->ToLanePosition(inertial_point);
+      const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
       EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
                                                  api::LanePosition(p * lane_length, expected_r, 0.), kVeryExact));
       EXPECT_TRUE(api::test::IsInertialPositionClose(
@@ -985,7 +1007,7 @@ TEST_F(MultilaneMultipleLanesTest, MultipleArcLanes) {
         const double effective_angle = p * kDTheta + kTheta0;
         const api::InertialPosition inertial_point = api::InertialPosition::FromXyz(
             kGeoCenter + effective_radius * math::Vector3(std::cos(effective_angle), std::sin(effective_angle), 0.));
-        const api::LanePositionResult result = lane->ToLanePosition(inertial_point);
+        const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
         EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position, api::LanePosition(p * radius * kDTheta, r, 0.),
                                                    kVeryExact));
         EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, inertial_point, kVeryExact));
@@ -1005,7 +1027,7 @@ TEST_F(MultilaneMultipleLanesTest, MultipleArcLanes) {
       const api::InertialPosition inertial_point = api::InertialPosition::FromXyz(
           kGeoCenter + kRadius * math::Vector3(std::cos(effective_angle), std::sin(effective_angle), 0.));
       const double expected_r = lane->segment_bounds(0.).min();
-      const api::LanePositionResult result = lane->ToLanePosition(inertial_point);
+      const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
       EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
                                                  api::LanePosition(p * radius * kDTheta, expected_r, 0.), kVeryExact));
       EXPECT_TRUE(api::test::IsInertialPositionClose(

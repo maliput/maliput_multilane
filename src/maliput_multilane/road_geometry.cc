@@ -48,11 +48,11 @@ api::RoadPositionResult FromLanePositionResult(const api::Lane* const lane, cons
   return {api::RoadPosition{lane, result.lane_position}, result.nearest_position, result.distance};
 }
 
-// Evaluates if the result of `lane->ToLanePosition()` using `inertial_position`
+// Evaluates if the result of `lane->ToSegmentPosition()` using `inertial_position`
 // provides a closer api::RoadPositionResult than `road_position_result`.
 //
 // _Closer_ means:
-// - When the distance result of `lane->ToLanePosition()` is smaller than
+// - When the distance result of `lane->ToSegmentPosition()` is smaller than
 //   `road_position_result.distance` by more than `linear_tolerance`.
 // - When distances are equal, if both positions fall within their
 //   respective lane's lane bounds or none do, the new r-coordinate
@@ -61,7 +61,7 @@ api::RoadPositionResult FromLanePositionResult(const api::Lane* const lane, cons
 //   `road_position_result.road_position.pos` doesn't.
 //
 // When any of the previous conditions is met, an api::RoadPositionResult
-// is returned using `lane`, and the results of calling `ToLanePosition()`
+// is returned using `lane`, and the results of calling `ToSegmentPosition()`
 // on it. Otherwise, it returns the original `road_position_result`.
 //
 // The following preconditions should be met:
@@ -73,7 +73,7 @@ const api::RoadPositionResult EvaluateRoadPositionResult(const api::InertialPosi
   MALIPUT_DEMAND(lane != nullptr);
 
   const api::RoadPositionResult new_road_position_result =
-      FromLanePositionResult(lane, lane->ToLanePosition(inertial_position));
+      FromLanePositionResult(lane, lane->ToSegmentPosition(inertial_position));
 
   const double delta = new_road_position_result.distance - road_position_result.distance;
   if (delta > linear_tolerance) {  // new_distance is bigger than *distance, so this LanePosition is discarded.
@@ -147,7 +147,7 @@ api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::InertialPositi
   // extends beyond only adjacent lanes.
   if (hint.has_value()) {
     MALIPUT_DEMAND(hint->lane != nullptr);
-    road_position_result = FromLanePositionResult(hint->lane, hint->lane->ToLanePosition(inertial_position));
+    road_position_result = FromLanePositionResult(hint->lane, hint->lane->ToSegmentPosition(inertial_position));
     if (road_position_result.distance != 0.) {
       // Loop through ongoing lanes at both ends of the current lane, to find
       // the position associated with the first found containing lane or the
@@ -169,7 +169,7 @@ api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::InertialPositi
     MALIPUT_DEMAND(junction(0)->num_segments() > 0);
     MALIPUT_DEMAND(junction(0)->segment(0)->num_lanes() > 0);
     const api::Lane* lane = this->junction(0)->segment(0)->lane(0);
-    road_position_result = FromLanePositionResult(lane, lane->ToLanePosition(inertial_position));
+    road_position_result = FromLanePositionResult(lane, lane->ToSegmentPosition(inertial_position));
     for (int i = 0; i < num_junctions(); ++i) {
       const api::Junction* junction = this->junction(i);
       for (int j = 0; j < junction->num_segments(); ++j) {

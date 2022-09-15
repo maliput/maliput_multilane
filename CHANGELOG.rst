@@ -2,8 +2,8 @@
 Changelog for package maliput_multilane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.3 (2022-09-14)
+------------------
 * Matches with changes in Maliput: Lane::ToLanePosition. (`#95 <https://github.com/maliput/maliput_multilane/issues/95>`_)
 * Contributors: Franco Cipollone
 

@@ -98,12 +98,35 @@ std::unique_ptr<maliput::api::RoadNetwork> BuildRoadNetworkFromParams(
   }
 }
 
+// Returns a dictionary of default parameters for the multilane builder.
+// There are two builders that will be used depending on the value of the 'road_network_source' parameter, so
+// the default parameters for each builder are returned.
+//
+// When road_network_source is
+// - yaml: The maliput::multilane::BuildRoadNetwork builder is used.
+// - on_ramp_merge: The maliput::multilane::BuildOnRampMergeRoadNetwork builder is used.
+std::map<std::string, std::string> GetDefaultParametersForTheBuilders() {
+  MultilaneRoadCharacteristics default_values{};
+  return {
+      {"road_network_source", "yaml"},
+      {"yaml_file", ""},
+      {"lane_width", std::to_string(default_values.lane_width)},
+      {"left_shoulder", std::to_string(default_values.left_shoulder)},
+      {"right_shoulder", std::to_string(default_values.right_shoulder)},
+      {"lane_number", std::to_string(default_values.lane_number)},
+  };
+}
+
 // Implementation of a maliput::plugin::RoadNetworkLoader using multilane backend.
 class RoadNetworkLoader : public maliput::plugin::RoadNetworkLoader {
  public:
   std::unique_ptr<maliput::api::RoadNetwork> operator()(
       const std::map<std::string, std::string>& properties) const override {
     return BuildRoadNetworkFromParams(properties);
+  }
+
+  std::map<std::string, std::string> GetDefaultParameters() const override {
+    return GetDefaultParametersForTheBuilders();
   }
 };
 

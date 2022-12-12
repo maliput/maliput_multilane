@@ -2,8 +2,8 @@
 Changelog for package maliput_multilane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.4 (2022-12-12)
+------------------
 * Implements interface for providing default parameters via plugin. (`#98 <https://github.com/maliput/maliput_multilane/issues/98>`_)
 * Updates triage workflow. (`#96 <https://github.com/maliput/maliput_multilane/issues/96>`_)
 * Contributors: Franco Cipollone

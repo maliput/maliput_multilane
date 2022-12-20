@@ -1,6 +1,7 @@
 find_package(ament_cmake_gtest REQUIRED)
 
 ament_add_gtest(road_network_plugin road_network_plugin_test.cc)
+ament_add_gtest(on_ramp_road_network_plugin on_ramp_road_network_plugin_test.cc)
 
 macro(add_dependencies_to_test target)
     if (TARGET ${target})
@@ -42,3 +43,4 @@ macro(add_dependencies_to_test target)
 endmacro()
 
 add_dependencies_to_test(road_network_plugin)
+add_dependencies_to_test(on_ramp_road_network_plugin)

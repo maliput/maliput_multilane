@@ -31,6 +31,7 @@
 
 #include <maliput/plugin/road_network_loader.h>
 
+#include "maliput_multilane/multilane_onramp_merge.h"
 #include "maliput_multilane/road_network_builder.h"
 
 namespace maliput {
@@ -43,17 +44,18 @@ class RoadNetworkLoader : public maliput::plugin::RoadNetworkLoader {
  public:
   std::unique_ptr<maliput::api::RoadNetwork> operator()(
       const std::map<std::string, std::string>& properties) const override {
-    return maliput::multilane::BuildRoadNetwork(maliput::multilane::RoadNetworkConfiguration::FromMap(properties));
+    return maliput::multilane::BuildOnRampMergeRoadNetwork(
+        maliput::multilane::MultilaneRoadCharacteristics::FromMap(properties));
   }
 
   std::map<std::string, std::string> GetDefaultParameters() const override {
-    return maliput::multilane::RoadNetworkConfiguration().ToStringMap();
+    return maliput::multilane::MultilaneRoadCharacteristics().ToStringMap();
   }
 };
 
 }  // namespace
 
-REGISTER_ROAD_NETWORK_LOADER_PLUGIN("maliput_multilane", RoadNetworkLoader);
+REGISTER_ROAD_NETWORK_LOADER_PLUGIN("maliput_multilane_on_ramp", RoadNetworkLoader);
 
 }  // namespace plugin
 }  // namespace multilane

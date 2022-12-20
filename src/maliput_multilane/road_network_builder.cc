@@ -48,6 +48,7 @@
 
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/loader.h"
+#include "maliput_multilane/params.h"
 
 namespace maliput {
 namespace multilane {
@@ -78,6 +79,27 @@ bool IsIntersectionsNodeDefined(const YAML::Node& node) {
 }
 
 }  // namespace
+
+RoadNetworkConfiguration RoadNetworkConfiguration::FromMap(
+    const std::map<std::string, std::string>& road_network_configuration) {
+  RoadNetworkConfiguration config;
+  auto it = road_network_configuration.find(params::kYamlFile);
+  if (it != road_network_configuration.end()) {
+    config.yaml_file = it->second;
+  }
+  it = road_network_configuration.find(params::kYamlDescription);
+  if (it != road_network_configuration.end()) {
+    config.yaml_description = it->second;
+  }
+  return config;
+}
+
+std::map<std::string, std::string> RoadNetworkConfiguration::ToStringMap() const {
+  std::map<std::string, std::string> map;
+  map[params::kYamlFile] = yaml_file;
+  map[params::kYamlDescription] = yaml_description;
+  return map;
+}
 
 std::unique_ptr<api::RoadNetwork> BuildRoadNetwork(const RoadNetworkConfiguration& road_network_configuration) {
   maliput::log()->debug("Building multilane RoadNetwork.");

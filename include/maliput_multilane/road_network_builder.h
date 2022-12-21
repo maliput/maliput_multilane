@@ -29,9 +29,10 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
+#include <map>
 #include <memory>
+#include <string>
 
-#include <maliput/api/road_geometry.h>
 #include <maliput/api/road_network.h>
 
 #include "maliput_multilane/multilane_onramp_merge.h"

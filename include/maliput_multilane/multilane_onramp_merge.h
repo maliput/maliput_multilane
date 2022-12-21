@@ -30,8 +30,11 @@
 #pragma once
 
 #include <cmath>
+#include <map>
 #include <memory>
+#include <string>
 
+#include <maliput/api/lane_data.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/common/maliput_copyable.h>
 

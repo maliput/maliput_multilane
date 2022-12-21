@@ -95,10 +95,7 @@ RoadNetworkConfiguration RoadNetworkConfiguration::FromMap(
 }
 
 std::map<std::string, std::string> RoadNetworkConfiguration::ToStringMap() const {
-  std::map<std::string, std::string> map;
-  map[params::kYamlFile] = yaml_file;
-  map[params::kYamlDescription] = yaml_description;
-  return map;
+  return {{params::kYamlFile, yaml_file}, {params::kYamlDescription, yaml_description}};
 }
 
 std::unique_ptr<api::RoadNetwork> BuildRoadNetwork(const RoadNetworkConfiguration& road_network_configuration) {

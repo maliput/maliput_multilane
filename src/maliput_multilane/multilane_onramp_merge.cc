@@ -67,13 +67,13 @@ MultilaneRoadCharacteristics MultilaneRoadCharacteristics::FromMap(
 }
 
 std::map<std::string, std::string> MultilaneRoadCharacteristics::ToStringMap() const {
-  std::map<std::string, std::string> map;
-  map[params::kLaneWidth] = std::to_string(lane_width);
-  map[params::kLeftShoulder] = std::to_string(left_shoulder);
-  map[params::kRightShoulder] = std::to_string(right_shoulder);
-  map[params::kLaneNumber] = std::to_string(lane_number);
-  map[params::kElevationBounds] = maliput::math::Vector2(elevation_bounds.min(), elevation_bounds.max()).to_str();
-  return map;
+  return {
+      {params::kLaneWidth, std::to_string(lane_width)},
+      {params::kLeftShoulder, std::to_string(left_shoulder)},
+      {params::kRightShoulder, std::to_string(right_shoulder)},
+      {params::kLaneNumber, std::to_string(lane_number)}
+      {params::kElevationBounds, maliput::math::Vector2(elevation_bounds.min(), elevation_bounds.max()).to_str()}
+  };
 }
 
 std::unique_ptr<const maliput::api::RoadGeometry> MultilaneOnrampMerge::BuildOnramp() const {

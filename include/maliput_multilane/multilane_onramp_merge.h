@@ -30,8 +30,11 @@
 #pragma once
 
 #include <cmath>
+#include <map>
 #include <memory>
+#include <string>
 
+#include <maliput/api/lane_data.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/common/maliput_copyable.h>
 
@@ -45,24 +48,20 @@ namespace multilane {
 /// multilane road network; i.e. bounds on the lane width and shoulders width.
 /// Default settings are taken if no others are specified.
 struct MultilaneRoadCharacteristics {
-  /// Constructor for using default road geometries.
-  MultilaneRoadCharacteristics() = default;
+  /// Creates a MultilaneRoadCharacteristics out of a string dictionary.
+  /// @details The keys of the map are listed at @ref on_ramp_configuration_keys.
+  /// @param road_characteristics A string-string map containing the configuration for the builder.
+  static MultilaneRoadCharacteristics FromMap(const std::map<std::string, std::string>& road_characteristics);
 
-  /// Constructor for custom road geometries.
-  ///
-  /// @param lw Lane's width.
-  /// @param lshoulder The left shoulder width.
-  /// @param rshoulder The right shoulder width.
-  /// @param lnumber The number of lanes.
-  MultilaneRoadCharacteristics(double lw, double lshoulder, double rshoulder, int lnumber)
-      : lane_width(lw), left_shoulder(lshoulder), right_shoulder(rshoulder), lane_number(lnumber) {}
+  /// @details The keys of the map are listed at @ref on_ramp_configuration_keys.
+  /// @returns A string-string map containing the MultilaneRoadCharacteristics configuration.
+  std::map<std::string, std::string> ToStringMap() const;
 
-  const double lane_width{4.};
-  const double left_shoulder{2.};
-  const double right_shoulder{2.};
-  const int lane_number{1};
-
-  const maliput::api::HBounds elevation_bounds{0., 5.2};
+  double lane_width{4.};
+  double left_shoulder{2.};
+  double right_shoulder{2.};
+  int lane_number{1};
+  maliput::api::HBounds elevation_bounds{0., 5.2};
 };
 
 /// MultilaneOnrampMerge contains an example lane-merge scenario expressed as a

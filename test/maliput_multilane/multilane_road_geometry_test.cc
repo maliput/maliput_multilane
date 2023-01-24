@@ -109,7 +109,6 @@ class MultilaneLanesQueriesTest : public ::testing::Test {
   static constexpr double kAngularTolerance = 0.01 * M_PI;
   static constexpr double kScaleLength = 1.0;
   static const ComputationPolicy kComputationPolicy{ComputationPolicy::kPreferAccuracy};
-  // Define the lanes and connections.
   static constexpr double kArcDeltaTheta{M_PI / 2.};
   static constexpr double kArcRadius{50.};
   static constexpr double kLength{50.};

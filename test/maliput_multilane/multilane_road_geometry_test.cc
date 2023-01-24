@@ -78,59 +78,63 @@ const api::Lane* GetLaneByJunctionId(const api::RoadGeometry& rg, const std::str
   return GetLaneByJunctionId(rg, junction_id, 0, 0);
 }
 
-GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
-  // Define a serpentine road with multiple segments and branches.
-  const double kLinearTolerance = 0.01;
-  const double kAngularTolerance = 0.01 * M_PI;
-  const double kScaleLength = 1.0;
-  const ComputationPolicy kComputationPolicy{ComputationPolicy::kPreferAccuracy};
-  auto rb = multilane::BuilderFactory().Make(2. * kWidth, HBounds(0., kHeight), kLinearTolerance, kAngularTolerance,
-                                             kScaleLength, kComputationPolicy);
+class MultilaneLanesQueriesTest : public ::testing::Test {
+ public:
+  void SetUp() override {
+    const Connection* lane0 =
+        rb_->Connect("lane0", kMonolaneLayout, StartReference().at(kRoadOrigin, Direction::kForward),
+                     ArcOffset(kArcRadius, -kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
 
+    const Connection* lane1 =
+        rb_->Connect("lane1", kMonolaneLayout, StartReference().at(*lane0, Which::kFinish, Direction::kForward),
+                     LineOffset(kLength), EndReference().z_at(kFlatZ, Direction::kForward));
+
+    const Connection* lane2 =
+        rb_->Connect("lane2", kMonolaneLayout, StartReference().at(*lane1, Which::kFinish, Direction::kForward),
+                     ArcOffset(kArcRadius, kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
+    rb_->Connect("lane3a", kMonolaneLayout, StartReference().at(*lane2, Which::kFinish, Direction::kForward),
+                 LineOffset(kLength), EndReference().z_at(kFlatZ, Direction::kForward));
+
+    rb_->Connect("lane3b", kMonolaneLayout, StartReference().at(*lane2, Which::kFinish, Direction::kForward),
+                 ArcOffset(kArcRadius, kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
+
+    rb_->Connect("lane3c", kMonolaneLayout, StartReference().at(*lane2, Which::kFinish, Direction::kForward),
+                 ArcOffset(kArcRadius, -kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
+    rg_ = rb_->Build(api::RoadGeometryId{"multi_lane_with_branches"});
+    ASSERT_NE(rg_, nullptr);
+  }
+
+  // Define a serpentine road with multiple segments and branches.
+  static constexpr double kLinearTolerance = 0.01;
+  static constexpr double kAngularTolerance = 0.01 * M_PI;
+  static constexpr double kScaleLength = 1.0;
+  static const ComputationPolicy kComputationPolicy{ComputationPolicy::kPreferAccuracy};
+  // Define the lanes and connections.
+  static constexpr double kArcDeltaTheta{M_PI / 2.};
+  static constexpr double kArcRadius{50.};
+  static constexpr double kLength{50.};
+  static constexpr int kOneLane{1};
+  static constexpr double kZeroR0{0.};
+  static constexpr double kNoShoulder{0.};
+  static constexpr int kRefLane{0};
   // Initialize the road from the origin.
   const multilane::EndpointXy kOriginXy{0., 0., 0.};
   const multilane::EndpointZ kFlatZ{0., 0., 0., 0.};
   const multilane::Endpoint kRoadOrigin{kOriginXy, kFlatZ};
 
-  // Define the lanes and connections.
-  const double kArcDeltaTheta{M_PI / 2.};
-  const double kArcRadius{50.};
-  const double kLength{50.};
-  const double kOneLane{1};
-  const double kZeroR0{0.};
-  const double kNoShoulder{0.};
+  const LaneLayout kMonolaneLayout{kNoShoulder, kNoShoulder, kOneLane, kRefLane, kZeroR0};
 
-  const int kRefLane{0};
-  const LaneLayout kMonolaneLayout(kNoShoulder, kNoShoulder, kOneLane, kRefLane, kZeroR0);
+  std::unique_ptr<BuilderBase> rb_ = multilane::BuilderFactory().Make(
+      2. * kWidth, HBounds(0., kHeight), kLinearTolerance, kAngularTolerance, kScaleLength, kComputationPolicy);
+  std::unique_ptr<const api::RoadGeometry> rg_;
+};
 
-  const auto& lane0 =
-      rb->Connect("lane0", kMonolaneLayout, StartReference().at(kRoadOrigin, Direction::kForward),
-                  ArcOffset(kArcRadius, -kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
-
-  const auto& lane1 =
-      rb->Connect("lane1", kMonolaneLayout, StartReference().at(*lane0, Which::kFinish, Direction::kForward),
-                  LineOffset(kLength), EndReference().z_at(kFlatZ, Direction::kForward));
-
-  const auto& lane2 =
-      rb->Connect("lane2", kMonolaneLayout, StartReference().at(*lane1, Which::kFinish, Direction::kForward),
-                  ArcOffset(kArcRadius, kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
-
-  rb->Connect("lane3a", kMonolaneLayout, StartReference().at(*lane2, Which::kFinish, Direction::kForward),
-              LineOffset(kLength), EndReference().z_at(kFlatZ, Direction::kForward));
-
-  rb->Connect("lane3b", kMonolaneLayout, StartReference().at(*lane2, Which::kFinish, Direction::kForward),
-              ArcOffset(kArcRadius, kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
-
-  rb->Connect("lane3c", kMonolaneLayout, StartReference().at(*lane2, Which::kFinish, Direction::kForward),
-              ArcOffset(kArcRadius, -kArcDeltaTheta), EndReference().z_at(kFlatZ, Direction::kForward));
-
-  std::unique_ptr<const api::RoadGeometry> rg = rb->Build(api::RoadGeometryId{"multi_lane_with_branches"});
-
+TEST_F(MultilaneLanesQueriesTest, DoToRoadPosition) {
   // Place a point at the middle of lane1.
   api::InertialPosition inertial_pos{kArcRadius, -kArcRadius - kLength / 2., 0.};
 
   api::InertialPosition nearest_position{};
-  api::RoadPositionResult result = rg->ToRoadPosition(inertial_pos);
+  api::RoadPositionResult result = rg_->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point centered within lane1 (straight segment).
   EXPECT_TRUE(api::test::IsLanePositionClose(
@@ -144,7 +148,7 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
   // Place a point halfway to the end of lane1, just to the outside (left side)
   // of the lane bounds.
   inertial_pos = api::InertialPosition(kArcRadius + 2. * kWidth, -kArcRadius - kLength / 2., 0.);
-  result = rg->ToRoadPosition(inertial_pos);
+  result = rg_->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point just outside (to the left) of lane1, by an
   // amount kWidth.
@@ -158,7 +162,7 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
 
   // Place a point at the middle of lane3a (straight segment).
   inertial_pos = api::InertialPosition(2. * kArcRadius + kLength / 2., -2. * kArcRadius - kLength, 0.);
-  result = rg->ToRoadPosition(inertial_pos);
+  result = rg_->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point centered within lane3a.
   EXPECT_TRUE(api::test::IsLanePositionClose(
@@ -171,7 +175,7 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
 
   // Place a point high above the middle of lane3a (straight segment).
   inertial_pos = api::InertialPosition(2. * kArcRadius + kLength / 2., -2. * kArcRadius - kLength, 50.);
-  result = rg->ToRoadPosition(inertial_pos);
+  result = rg_->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point centered above lane3a.
   EXPECT_TRUE(api::test::IsLanePositionClose(
@@ -183,7 +187,7 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
 
   // Place a point at the end of lane3b (arc segment).
   inertial_pos = api::InertialPosition(2. * kArcRadius + kLength, -kArcRadius - kLength, 0.);
-  result = rg->ToRoadPosition(inertial_pos);
+  result = rg_->ToRoadPosition(inertial_pos);
 
   // Expect to locate the point at the end of lane3b.
   EXPECT_TRUE(api::test::IsLanePositionClose(
@@ -196,8 +200,8 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
 
   // Supply a hint with a position at the start of lane3c to try and determine
   // the RoadPosition for a point at the end of lane3b.
-  api::RoadPosition hint{GetLaneByJunctionId(*rg, "j:lane3c"), {0., 0., 0.}};
-  result = rg->ToRoadPosition(inertial_pos, hint);
+  api::RoadPosition hint{GetLaneByJunctionId(*rg_, "j:lane3c"), {0., 0., 0.}};
+  result = rg_->ToRoadPosition(inertial_pos, hint);
 
   // Expect to locate the point outside of lanes lane3c (and ongoing adjacent
   // lanes), since lane3b is not ongoing from lane3c.
@@ -206,8 +210,8 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
 
   // Supply a hint with a position at the start of lane2 to try and determine
   // the RoadPosition for a point at the end of lane3b.
-  hint = api::RoadPosition{GetLaneByJunctionId(*rg, "j:lane2"), {0., 0., 0.}};
-  result = rg->ToRoadPosition(inertial_pos, hint);
+  hint = api::RoadPosition{GetLaneByJunctionId(*rg_, "j:lane2"), {0., 0., 0.}};
+  result = rg_->ToRoadPosition(inertial_pos, hint);
 
   // Expect to traverse to lane3b (an ongoing lane) and then locate the point
   // within lane lane3b.
@@ -216,6 +220,68 @@ GTEST_TEST(MultilaneLanesTest, DoToRoadPosition) {
   EXPECT_TRUE(api::test::IsInertialPositionClose(
       result.nearest_position, api::InertialPosition(inertial_pos.x(), inertial_pos.y(), inertial_pos.z()),
       kVeryExact));
+}
+
+TEST_F(MultilaneLanesQueriesTest, DoToFindRoadPositions) {
+  // Place a point at the middle of lane1 with a radius that should find only the lane1.
+  api::InertialPosition inertial_pos{kArcRadius, -kArcRadius - kLength / 2., 0.};
+  double radius = 0.5;
+  api::InertialPosition nearest_position{};
+
+  std::vector<api::RoadPositionResult> results = rg_->FindRoadPositions(inertial_pos, radius);
+  ASSERT_EQ(static_cast<int>(results.size()), 1);
+  api::RoadPositionResult result = results[0];
+
+  // Expect to locate the point centered within lane1 (straight segment).
+  EXPECT_TRUE(api::test::IsLanePositionClose(
+      result.road_position.pos, api::LanePosition(kLength / 2. /* s */, 0. /* r */, 0. /* h */), kVeryExact));
+  EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane1_0"));
+  EXPECT_EQ(result.distance, 0.);
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition(inertial_pos.x(), inertial_pos.y(), inertial_pos.z()),
+      kVeryExact));
+
+  // Place the point at the end of lane1. Lane1 and lane2 should be found.
+  inertial_pos = {kArcRadius, -kArcRadius - kLength, 0.};
+  results = rg_->FindRoadPositions(inertial_pos, radius);
+  ASSERT_EQ(static_cast<int>(results.size()), 2);
+
+  auto find_lane_in_results = [](const api::LaneId& lane_id, const std::vector<api::RoadPositionResult>& results) {
+    auto lane_itr = std::find_if(results.begin(), results.end(), [&lane_id](const api::RoadPositionResult& result) {
+      return result.road_position.lane->id() == lane_id;
+    });
+    return lane_itr;
+  };
+
+  // Checking l:lane1_0 result.
+  auto lane_1_0_itr = find_lane_in_results(api::LaneId("l:lane1_0"), results);
+  ASSERT_NE(lane_1_0_itr, results.end());
+  result = *lane_1_0_itr;
+
+  // Expect to locate the point at the end of lane1.
+  const api::InertialPosition inertial_pos_lane_1{kArcRadius, -kArcRadius - kLength, 0.};
+  EXPECT_TRUE(api::test::IsLanePositionClose(result.road_position.pos,
+                                             api::LanePosition(kLength /* s */, 0. /* r */, 0. /* h */), kVeryExact));
+  EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane1_0"));
+  EXPECT_EQ(result.distance, 0.);
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position,
+      api::InertialPosition(inertial_pos_lane_1.x(), inertial_pos_lane_1.y(), inertial_pos_lane_1.z()), kVeryExact));
+
+  // Checking l:lane2_0 result.
+  auto lane_2_0_itr = find_lane_in_results(api::LaneId("l:lane2_0"), results);
+  ASSERT_NE(lane_2_0_itr, results.end());
+  result = *lane_2_0_itr;
+
+  // Expect to locate the point at the end of lane1.
+  const api::InertialPosition inertial_pos_lane_2{kArcRadius, -kArcRadius - kLength, 0.};
+  EXPECT_TRUE(api::test::IsLanePositionClose(result.road_position.pos,
+                                             api::LanePosition(0. /* s */, 0. /* r */, 0. /* h */), kVeryExact));
+  EXPECT_EQ(result.road_position.lane->id(), api::LaneId("l:lane2_0"));
+  EXPECT_EQ(result.distance, 0.);
+  EXPECT_TRUE(api::test::IsInertialPositionClose(
+      result.nearest_position,
+      api::InertialPosition(inertial_pos_lane_2.x(), inertial_pos_lane_2.y(), inertial_pos_lane_2.z()), kVeryExact));
 }
 
 GTEST_TEST(MultilaneLanesTest, HintWithDisconnectedLanes) {

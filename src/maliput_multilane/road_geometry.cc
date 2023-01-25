@@ -35,6 +35,7 @@
 #include <maliput/api/segment.h>
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_unused.h>
+#include <maliput/geometry_base/brute_force_find_road_positions_strategy.h>
 
 namespace maliput {
 namespace multilane {
@@ -187,9 +188,7 @@ api::RoadPositionResult RoadGeometry::DoToRoadPosition(const api::InertialPositi
 
 std::vector<api::RoadPositionResult> RoadGeometry::DoFindRoadPositions(const api::InertialPosition& inertial_position,
                                                                        double radius) const {
-  maliput::common::unused(inertial_position);
-  maliput::common::unused(radius);
-  MALIPUT_ABORT_MESSAGE("Unimplemented method.");
+  return maliput::geometry_base::BruteForceFindRoadPositionsStrategy(this, inertial_position, radius);
 }
 
 }  // namespace multilane

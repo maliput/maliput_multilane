@@ -39,6 +39,7 @@ target_link_libraries(maliput_multilane
   PUBLIC
     maliput::api
     maliput::base
+    maliput::geometry_base
     maliput::common
     maliput::math
   PRIVATE

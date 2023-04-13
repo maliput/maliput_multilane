@@ -2,8 +2,8 @@
 Changelog for package maliput_multilane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.5 (2023-04-13)
+------------------
 * RoadGeometry::FindRoadPositions: Uses maliput-provided base method.  (`#101 <https://github.com/maliput/maliput_multilane/issues/101>`_)
 * Provides plugins for both builders and improves params configuration. (`#99 <https://github.com/maliput/maliput_multilane/issues/99>`_)
 * Contributors: Franco Cipollone

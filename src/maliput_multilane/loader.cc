@@ -576,17 +576,17 @@ std::unique_ptr<const api::RoadGeometry> BuildFrom(const BuilderFactoryBase& bui
   maliput::log()->debug("building cooked connections !");
   std::map<std::string, const Connection*> cooked_connections;
   while (!raw_connections.empty()) {
-    maliput::log()->debug("raw count {}  cooked count {}", raw_connections.size(), cooked_connections.size());
+    maliput::log()->debug("raw count ", raw_connections.size(), " cooked count ", cooked_connections.size());
     const size_t cooked_before_this_pass = cooked_connections.size();
     for (const auto& r : raw_connections) {
       const std::string id = r.first;
       const Connection* conn = MaybeMakeConnection(id, r.second, point_catalog, cooked_connections, builder.get(),
                                                    default_left_shoulder, default_right_shoulder);
       if (!conn) {
-        maliput::log()->debug("...skipping '{}'", id);
+        maliput::log()->debug("...skipping '", id, "'");
         continue;
       }
-      maliput::log()->debug("...cooked '{}'", id);
+      maliput::log()->debug("...cooked '", id, "'");
       cooked_connections[id] = conn;
     }
     MALIPUT_DEMAND(cooked_connections.size() > cooked_before_this_pass);
@@ -602,18 +602,18 @@ std::unique_ptr<const api::RoadGeometry> BuildFrom(const BuilderFactoryBase& bui
     std::map<std::string, const Group*> cooked_groups;
     for (const auto& g : groups) {
       const std::string gid = g.first.as<std::string>();
-      maliput::log()->debug("   create group '{}'", gid);
+      maliput::log()->debug("   create group '", gid, "'");
       Group* group = builder->MakeGroup(gid);
       YAML::Node cids_node = g.second;
       MALIPUT_DEMAND(cids_node.IsSequence());
       for (const YAML::Node& cid_node : cids_node) {
         const std::string cid = cid_node.as<std::string>();
-        maliput::log()->debug("      add cnx '{}'", cid);
+        maliput::log()->debug("      add cnx '", cid, "'");
         group->Add(cooked_connections[cid]);
       }
     }
   }
-  maliput::log()->debug("building road geometry {}", mmb["id"].Scalar());
+  maliput::log()->debug("building road geometry ", mmb["id"].Scalar());
   return builder->Build(api::RoadGeometryId{mmb["id"].Scalar()});
 }
 

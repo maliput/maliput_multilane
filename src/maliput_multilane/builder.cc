@@ -520,9 +520,9 @@ std::unique_ptr<const api::RoadGeometry> Builder::Build(const api::RoadGeometryI
 
   for (const std::unique_ptr<Group>& group : groups_) {
     Junction* junction = road_geometry->NewJunction(api::JunctionId{std::string("j:") + group->id()});
-    maliput::log()->debug("junction: {}", junction->id().string());
+    maliput::log()->debug("junction: ", junction->id().string());
     for (auto& connection : group->connections()) {
-      maliput::log()->debug("connection: {}", connection->id());
+      maliput::log()->debug("connection: ", connection->id());
       MALIPUT_DEMAND(!connection_was_built[connection]);
       lane_map[connection] =
           BuildConnection(connection, junction, elevation_bounds_, angular_tolerance_, road_geometry.get(), &bp_map);
@@ -535,8 +535,8 @@ std::unique_ptr<const api::RoadGeometry> Builder::Build(const api::RoadGeometryI
       continue;
     }
     Junction* junction = road_geometry->NewJunction(api::JunctionId{std::string("j:") + connection->id()});
-    maliput::log()->debug("junction: {}", junction->id().string());
-    maliput::log()->debug("connection: {}", connection->id());
+    maliput::log()->debug("junction: ", junction->id().string());
+    maliput::log()->debug("connection: ", connection->id());
     lane_map[connection.get()] = BuildConnection(connection.get(), junction, elevation_bounds_, angular_tolerance_,
                                                  road_geometry.get(), &bp_map);
   }

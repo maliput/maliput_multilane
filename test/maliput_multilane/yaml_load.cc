@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     maliput::log()->error("No input file!");
     return 1;
   }
-  maliput::log()->info("Loading '{}'.", FLAGS_yaml_file);
+  maliput::log()->info("Loading '", FLAGS_yaml_file, "'.");
   auto rg = multilane::LoadFile(multilane::BuilderFactory(), FLAGS_yaml_file);
   const std::vector<std::string> failures = rg->CheckInvariants();
 

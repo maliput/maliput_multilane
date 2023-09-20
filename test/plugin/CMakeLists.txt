@@ -30,14 +30,13 @@ macro(add_dependencies_to_test target)
           maliput_multilane::maliput_multilane
           maliput::common
           maliput::plugin
-          # maliput_drake is required because we include maliput_multilane/road_geometry.h to verify
+          # maliput::drake is required because we include maliput_multilane/road_geometry.h to verify
           # the type of the loaded plugin. That requires other types to be imported as well which
           # boils down up to road_curve.h.
-          maliput_drake::analysis
-          maliput_drake::common
-          maliput_drake::framework
-          maliput_drake::math
-          maliput_drake::trajectories
+          maliput::drake_common
+          maliput::drake_common_trajectories
+          maliput::drake_systems_analysis
+          maliput::drake_systems_framework
       )
     endif()
 endmacro()

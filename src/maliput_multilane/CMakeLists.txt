@@ -42,8 +42,8 @@ target_link_libraries(maliput_multilane
     maliput::geometry_base
     maliput::common
     maliput::math
-  PRIVATE
     maliput_drake::analysis
+  PRIVATE
     maliput_drake::common
     maliput_drake::framework
     maliput_drake::math

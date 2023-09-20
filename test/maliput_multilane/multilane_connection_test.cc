@@ -33,8 +33,8 @@
 
 #include <cmath>
 #include <ostream>
+#include <sstream>
 
-#include <fmt/format.h>
 #include <gtest/gtest.h>
 #include <maliput/math/vector.h>
 #include <maliput/test_utilities/maliput_math_compare.h>
@@ -72,20 +72,20 @@ using maliput::math::test::CompareVectors;
     const double delta = std::abs(coefficients1[i] - coefficients2[i]);
     if (delta > tolerance) {
       fails = true;
-      error_message += fmt::format(
-          "Cubic polynomials are different at {0} coefficient. "
-          "cubic1.{0}(): {1} vs. cubic2.{0}(): {2}, diff = {3}, "
-          "tolerance = {4}\n",
-          coefficient_strs[i], coefficients1[i], coefficients2[i], delta, tolerance);
+      std::stringstream ss;
+      ss << "Cubic polynomials are different at " << coefficient_strs[i] << " coefficient. "
+         << "cubic1." << coefficient_strs[i] << "(): " << std::to_string(coefficients1[i]) << " vs. cubic2."
+         << coefficient_strs[i] << "(): " << std::to_string(coefficients2[i]) << ", diff = " << std::to_string(delta)
+         << ", tolerance = " << std::to_string(tolerance) << "\n";
+      error_message += ss.str();
     }
   }
   if (fails) {
     return ::testing::AssertionFailure() << error_message;
   }
-  return ::testing::AssertionSuccess() << fmt::format(
-             "cubic1 =\n{}\nis approximately equal to cubic2 =\n{}"
-             "\ntolerance = {}",
-             cubic1, cubic2, tolerance);
+  std::stringstream ss;
+  ss << "cubic1 =\n" << cubic1 << "\nis approximately equal to cubic2 =\n" << cubic2 << "\ntolerance = " << tolerance;
+  return ::testing::AssertionSuccess() << ss.str();
 }
 
 }  // namespace test
@@ -388,11 +388,10 @@ struct EndpointZTestParameters {
 // no stream insertion operator overload is present) and trigger Valgrind
 // errors.
 std::ostream& operator<<(std::ostream& stream, const EndpointZTestParameters& endpoint_z_test_param) {
-  return stream << fmt::format(
-             "EndpointZTestParameters( start_z: ({}), "
-             "end_z: ({}), r0: {}, num_lanes: {})",
-             endpoint_z_test_param.start_z, endpoint_z_test_param.end_z, endpoint_z_test_param.r0,
-             endpoint_z_test_param.num_lanes);
+  stream << "EndpointZTestParameters( start_z: (" << endpoint_z_test_param.start_z << "), "
+         << "end_z: (" << endpoint_z_test_param.end_z << "), r0: " << endpoint_z_test_param.r0
+         << ", num_lanes: " << endpoint_z_test_param.num_lanes << ")";
+  return stream;
 }
 
 // Groups common test constants as well as each test case parameters.

@@ -35,10 +35,10 @@
 #include <functional>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <tuple>
 
-#include <fmt/format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <maliput/api/branch_point.h>
@@ -285,26 +285,28 @@ GTEST_TEST(MultilaneLoaderTest, MinimalCorrectYaml) {
   const double kZeroTolerance{0.};
   const double kLinearTolerance{0.01};
   const double kAngularTolerance{0.5 * M_PI / 180.};
+  const double kDefaultLeftShoulder{1};
+  const double kDefaultRightShoulder{2};
   const ComputationPolicy kComputationPolicy{ComputationPolicy::kPreferAccuracy};
   const std::string kComputationPolicyStr{"prefer-accuracy"};
   const api::HBounds kElevationBounds{0., 5.};
-  const std::string kMultilaneYaml = fmt::format(
-      R"R(maliput_multilane_builder:
-  id: "{}"
-  lane_width: {}
-  left_shoulder: 1
-  right_shoulder: 2
-  elevation_bounds: [{}, {}]
-  scale_length: {}
-  linear_tolerance: {}
-  angular_tolerance: {}
-  computation_policy: {}
-  points: {{}}
-  connections: {{}}
-  groups: {{}}
-)R",
-      kRoadName, kLaneWidth, kElevationBounds.min(), kElevationBounds.max(), kScaleLength, kLinearTolerance,
-      kAngularTolerance * 180. / M_PI, kComputationPolicyStr);
+  const std::string kMultilaneYaml = [&]() {
+    std::stringstream ss;
+    ss << "maliput_multilane_builder:\n";
+    ss << "  id: \"" << kRoadName << "\"\n";
+    ss << "  lane_width: " << kLaneWidth << "\n";
+    ss << "  left_shoulder: " << kDefaultLeftShoulder << "\n";
+    ss << "  right_shoulder: " << kDefaultRightShoulder << "\n";
+    ss << "  elevation_bounds: [" << kElevationBounds.min() << ", " << kElevationBounds.max() << "]\n";
+    ss << "  scale_length: " << kScaleLength << "\n";
+    ss << "  linear_tolerance: " << kLinearTolerance << "\n";
+    ss << "  angular_tolerance: " << kAngularTolerance * 180. / M_PI << "\n";
+    ss << "  computation_policy: " << kComputationPolicyStr << "\n";
+    ss << "  points: {}\n";
+    ss << "  connections: {}\n";
+    ss << "  groups: {}\n";
+    return ss.str();
+  }();
 
   auto local_builder_mock =
       std::make_unique<BuilderMock>(kLaneWidth, kElevationBounds, kLinearTolerance, kAngularTolerance, kScaleLength,
@@ -378,17 +380,19 @@ GTEST_TEST(MultilaneLoaderTest, RoadCircuit) {
   const double kCustomRightShoulder{0.8};
   const std::string kRoadName{"circuit"};
 
-  const std::string kMultilaneYaml = fmt::format(
-      R"R(maliput_multilane_builder:
-  id: "{}"
-  lane_width: {}
-  left_shoulder: {}
-  right_shoulder: {}
-  elevation_bounds: [{}, {}]
-  scale_length: {}
-  linear_tolerance: {}
-  angular_tolerance: {}
-  computation_policy: {}
+  const std::string kMultilaneYaml = [&]() {
+    std::stringstream ss;
+    ss << "maliput_multilane_builder:\n";
+    ss << "  id: \"" << kRoadName << "\"\n";
+    ss << "  lane_width: " << kLaneWidth << "\n";
+    ss << "  left_shoulder: " << kDefaultLeftShoulder << "\n";
+    ss << "  right_shoulder: " << kDefaultRightShoulder << "\n";
+    ss << "  elevation_bounds: [" << kElevationBounds.min() << ", " << kElevationBounds.max() << "]\n";
+    ss << "  scale_length: " << kScaleLength << "\n";
+    ss << "  linear_tolerance: " << kLinearTolerance << "\n";
+    ss << "  angular_tolerance: " << kAngularTolerance * 180. / M_PI << "\n";
+    ss << "  computation_policy: " << kComputationPolicyStr << "\n";
+    ss << R"R(
   points:
     a:
       xypoint: [0, 0, 0]
@@ -403,14 +407,16 @@ GTEST_TEST(MultilaneLoaderTest, RoadCircuit) {
       length: 50
       z_end: ["ref", [0, 0, 0, 0]]
     s2:
-      lanes: [1, 0, 0]
-      left_shoulder: {}
+      lanes: [1, 0, 0])R";
+    ss << "\n      left_shoulder: " << kCustomLeftShoulder << "\n";
+    ss << R"R(
       start: ["lane.0", "connections.s1.end.2.forward"]
       arc: [10, 180]
       z_end: ["lane.0", [0, 0, 0]]
     s3:
-      lanes: [1, 0, 0]
-      right_shoulder: {}
+      lanes: [1, 0, 0])R";
+    ss << "\n      right_shoulder: " << kCustomRightShoulder << "\n";
+    ss << R"R(
       start: ["lane.0", "connections.s2.end.0.forward"]
       length: 50
       z_end: ["lane.0", [0, 0, 0]]
@@ -467,11 +473,9 @@ GTEST_TEST(MultilaneLoaderTest, RoadCircuit) {
   groups:
     g1: [s2, s5]
     g2: [s4, s8, s10]
-)R",
-      kRoadName, kLaneWidth, kDefaultLeftShoulder, kDefaultRightShoulder, kElevationBounds.min(),
-      kElevationBounds.max(), kScaleLength, kLinearTolerance, kAngularTolerance * 180. / M_PI, kComputationPolicyStr,
-      kCustomLeftShoulder, kCustomRightShoulder);
-
+)R";
+    return ss.str();
+  }();
   auto local_group_factory = std::make_unique<GroupFactoryMock>();
   GroupFactoryMock* group_factory_mock = local_group_factory.get();
 
@@ -681,17 +685,19 @@ GTEST_TEST(MultilaneLoaderTest, ContinuityConstraintOnReference) {
   const double kDefaultLeftShoulder{4};
   const double kDefaultRightShoulder{4};
   const std::string kRoadName{"spir"};
-  const std::string kMultilaneYaml = fmt::format(
-      R"R(maliput_multilane_builder:
-  id: "{}"
-  lane_width: {}
-  left_shoulder: {}
-  right_shoulder: {}
-  elevation_bounds: [{}, {}]
-  linear_tolerance: {}
-  angular_tolerance: {}
-  scale_length: {}
-  computation_policy: {}
+  const std::string kMultilaneYaml = [&]() {
+    std::stringstream ss;
+    ss << "maliput_multilane_builder:\n";
+    ss << "  id: \"" << kRoadName << "\"\n";
+    ss << "  lane_width: " << kLaneWidth << "\n";
+    ss << "  left_shoulder: " << kDefaultLeftShoulder << "\n";
+    ss << "  right_shoulder: " << kDefaultRightShoulder << "\n";
+    ss << "  elevation_bounds: [" << kElevationBounds.min() << ", " << kElevationBounds.max() << "]\n";
+    ss << "  scale_length: " << kScaleLength << "\n";
+    ss << "  linear_tolerance: " << kLinearTolerance << "\n";
+    ss << "  angular_tolerance: " << kAngularTolerance * 180. / M_PI << "\n";
+    ss << "  computation_policy: " << kPreferAccuracyStr << "\n";
+    ss << R"R(
   points:
     origin:
       xypoint: [0, 0, 0]
@@ -707,10 +713,9 @@ GTEST_TEST(MultilaneLoaderTest, ContinuityConstraintOnReference) {
       start: ["ref", "connections.spiral.start.ref.reverse"]
       length: 100
       z_end: ["ref", [-7.5, -0.75, 30]]
-)R",
-      kRoadName, kLaneWidth, kDefaultLeftShoulder, kDefaultRightShoulder, kElevationBounds.min(),
-      kElevationBounds.max(), kLinearTolerance, kAngularTolerance * 180 / M_PI, kScaleLength, kPreferAccuracyStr);
-
+)R";
+    return ss.str();
+  }();
   auto local_builder_mock =
       std::make_unique<BuilderMock>(kLaneWidth, kElevationBounds, kLinearTolerance, kAngularTolerance, kScaleLength,
                                     kComputationPolicy, std::make_unique<GroupFactory>());
@@ -839,18 +844,19 @@ GTEST_TEST(MultilaneLoaderTest, FunkyRoadCircuit) {
   const double kLeftShoulder{1.0};
   const double kRightShoulder{1.0};
   const std::string kRoadName{"funky"};
-
-  const std::string kMultilaneYaml = fmt::format(
-      R"R(maliput_multilane_builder:
-  id: "{}"
-  lane_width: {}
-  left_shoulder: {}
-  right_shoulder: {}
-  elevation_bounds: [{}, {}]
-  scale_length: {}
-  linear_tolerance: {}
-  angular_tolerance: {}
-  computation_policy: "{}"
+  const std::string kMultilaneYaml = [&]() {
+    std::stringstream ss;
+    ss << "maliput_multilane_builder:\n";
+    ss << "  id: \"" << kRoadName << "\"\n";
+    ss << "  lane_width: " << kLaneWidth << "\n";
+    ss << "  left_shoulder: " << kLeftShoulder << "\n";
+    ss << "  right_shoulder: " << kRightShoulder << "\n";
+    ss << "  elevation_bounds: [" << kElevationBounds.min() << ", " << kElevationBounds.max() << "]\n";
+    ss << "  scale_length: " << kScaleLength << "\n";
+    ss << "  linear_tolerance: " << kLinearTolerance << "\n";
+    ss << "  angular_tolerance: " << kAngularTolerance * 180. / M_PI << "\n";
+    ss << "  computation_policy: " << kComputationPolicyStr << "\n";
+    ss << R"R(
   points:
     a:
       xypoint: [0, 0, 0]
@@ -963,9 +969,9 @@ GTEST_TEST(MultilaneLoaderTest, FunkyRoadCircuit) {
   groups:
     g1: [s1, s2, s3, s4, s5, s6]
     g2: [s7, s8, s9, s10, s11, s12]
-)R",
-      kRoadName, kLaneWidth, kLeftShoulder, kRightShoulder, kElevationBounds.min(), kElevationBounds.max(),
-      kScaleLength, kLinearTolerance, kAngularTolerance * 180. / M_PI, kComputationPolicyStr);
+)R";
+    return ss.str();
+  }();
 
   auto local_group_factory = std::make_unique<GroupFactoryMock>();
   GroupFactoryMock* group_factory_mock = local_group_factory.get();

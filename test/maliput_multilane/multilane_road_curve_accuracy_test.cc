@@ -36,7 +36,6 @@
 #include <tuple>
 #include <utility>
 
-#include <fmt/format.h>
 #include <gtest/gtest.h>
 #include <maliput/common/maliput_throw.h>
 #include <maliput/math/vector.h>
@@ -234,11 +233,11 @@ TEST_P(RoadCurveAccuracyTest, PathLengthComputationAccuracy) {
       const double relative_error = (k_order_s_approximation != 0.0)
                                         ? (s_from_p_at_r(p) - k_order_s_approximation) / k_order_s_approximation
                                         : s_from_p_at_r(p);
-      EXPECT_LE(relative_error, kTolerance) << fmt::format(
-          "Path length estimation with a tolerance of {} "
-          "m failed at p = {}, r = {} m, h = {} m with "
-          "{} for elevation and {} for superelevation",
-          road_curve->linear_tolerance(), p, r, kH, road_curve->elevation(), road_curve->superelevation());
+      EXPECT_LE(relative_error, kTolerance)
+          << "Path length estimation with a tolerance of " << std::to_string(road_curve->linear_tolerance()) << " "
+          << "m failed at p = " << std::to_string(p) << ", r = " << std::to_string(r)
+          << " m, h = " << std::to_string(kH) << " m with " << road_curve->elevation() << " for elevation and "
+          << road_curve->superelevation() << " for superelevation";
     }
   }
 }

@@ -12,7 +12,6 @@ project(maliput_multilane LANGUAGES C CXX VERSION 3.0.0)
 message(STATUS "\n\n====== Finding 3rd Party Packages ======\n")
 
 find_package(ament_cmake REQUIRED)
-find_package(fmt 6.1.2 EXACT REQUIRED)
 find_package(maliput REQUIRED)
 find_package(maliput_drake REQUIRED)
 find_package(yaml-cpp REQUIRED)
@@ -78,7 +77,6 @@ install(
 ament_export_include_directories(include)
 
 ament_export_dependencies(ament_cmake)
-ament_export_dependencies(fmt)
 ament_export_dependencies(maliput)
 ament_export_dependencies(maliput_drake)
 ament_export_dependencies(yaml-cpp)

@@ -13,7 +13,6 @@ message(STATUS "\n\n====== Finding 3rd Party Packages ======\n")
 
 find_package(ament_cmake REQUIRED)
 find_package(maliput REQUIRED)
-find_package(maliput_drake REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 ##############################################################################
@@ -78,7 +77,6 @@ ament_export_include_directories(include)
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(maliput)
-ament_export_dependencies(maliput_drake)
 ament_export_dependencies(yaml-cpp)
 ament_export_targets(${PROJECT_NAME}-targets HAS_LIBRARY_TARGET)
 ament_package()

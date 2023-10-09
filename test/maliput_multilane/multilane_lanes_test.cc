@@ -35,9 +35,10 @@
 #include <map>
 
 #include <gtest/gtest.h>
-#include <maliput/test_utilities/maliput_math_compare.h>
-#include <maliput/test_utilities/maliput_types_compare.h>
+#include <maliput/api/compare.h>
+#include <maliput/math/compare.h>
 
+#include "assert_compare.h"
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/junction.h"
 #include "maliput_multilane/line_road_curve.h"
@@ -49,7 +50,8 @@ namespace maliput {
 namespace multilane {
 namespace {
 
-using maliput::math::test::CompareVectors;
+using maliput::math::CompareVectors;
+using maliput::multilane::test::AssertCompare;
 
 const double kLinearTolerance = 1e-6;
 const double kAngularTolerance = 1e-6;
@@ -58,9 +60,9 @@ const double kVeryExact = 1e-12;
 GTEST_TEST(MultilaneLanesTest, Rot3) {
   // Spot-check that Rot3 is behaving as advertised.
   Rot3 rpy90{M_PI / 2., M_PI / 2., M_PI / 2.};
-  EXPECT_TRUE(CompareVectors(rpy90.apply({1., 0., 0.}), math::Vector3(0., 0., -1.), kVeryExact));
-  EXPECT_TRUE(CompareVectors(rpy90.apply({0., 1., 0.}), math::Vector3(0., 1., 0.), kVeryExact));
-  EXPECT_TRUE(CompareVectors(rpy90.apply({0., 0., 1.}), math::Vector3(1., 0., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(CompareVectors(rpy90.apply({1., 0., 0.}), math::Vector3(0., 0., -1.), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(rpy90.apply({0., 1., 0.}), math::Vector3(0., 1., 0.), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(rpy90.apply({0., 0., 1.}), math::Vector3(1., 0., 0.), kVeryExact)));
 }
 
 class MultilaneLanesParamTest : public ::testing::TestWithParam<double> {
@@ -99,33 +101,35 @@ TEST_P(MultilaneLanesParamTest, FlatLineLane) {
 
   EXPECT_NEAR(l1->length(), std::sqrt((100. * 100) + (50. * 50.)), kVeryExact);
 
+  EXPECT_TRUE(AssertCompare(
+      api::IsRBoundsClose(l1->lane_bounds(0.), api::RBounds(-kHalfLaneWidth, kHalfLaneWidth), kVeryExact)));
   EXPECT_TRUE(
-      api::test::IsRBoundsClose(l1->lane_bounds(0.), api::RBounds(-kHalfLaneWidth, kHalfLaneWidth), kVeryExact));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l1->segment_bounds(0.), api::RBounds(-kHalfWidth, kHalfWidth), kVeryExact));
-  EXPECT_TRUE(api::test::IsHBoundsClose(l1->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact));
+      AssertCompare(api::IsRBoundsClose(l1->segment_bounds(0.), api::RBounds(-kHalfWidth, kHalfWidth), kVeryExact)));
+  EXPECT_TRUE(
+      AssertCompare(api::IsHBoundsClose(l1->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l1->ToInertialPosition({0., 0., 0.}),
-      api::InertialPosition::FromXyz(math::Vector3(100., -75., 0.) + r_offset_vector), kLinearTolerance));
+      api::InertialPosition::FromXyz(math::Vector3(100., -75., 0.) + r_offset_vector), kLinearTolerance)));
 
   // A little bit along the lane, but still on the reference line.
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l1->ToInertialPosition({1., 0., 0.}),
       api::InertialPosition::FromXyz(
           math::Vector3(100. + ((100. / l1->length()) * 1.), -75. + ((50. / l1->length()) * 1.), 0.) + r_offset_vector),
-      kLinearTolerance));
+      kLinearTolerance)));
   // At the very beginning of the lane, but laterally off the reference line.
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l1->ToInertialPosition({0., 3., 0.}),
       api::InertialPosition::FromXyz(
           math::Vector3(100. + ((-50. / l1->length()) * 3.), -75. + ((100. / l1->length()) * 3.), 0.) +
           r_offset_vector),
-      kLinearTolerance));
+      kLinearTolerance)));
   // At the very end of the lane.
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l1->ToInertialPosition({l1->length(), 0., 0.}),
       api::InertialPosition(200. + r_offset_vector.x(), -25. + r_offset_vector.y(), 0. + r_offset_vector.z()),
-      kLinearTolerance));
+      kLinearTolerance)));
   // Case 1: Tests LineLane::ToSegmentPosition() and LineLane::ToLanePosition() with a closest point that lies
   // within the lane bounds.
   const api::InertialPosition point_within_lane{150., -50., 0.};
@@ -135,18 +139,18 @@ TEST_P(MultilaneLanesParamTest, FlatLineLane) {
 
   // ToSegmentPosition
   api::LanePositionResult result = l1->ToSegmentPosition(point_within_lane);
-  EXPECT_TRUE(
-      api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, api::InertialPosition(150., -50., 0.),
-                                                 kLinearTolerance));
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(
+      api::IsInertialPositionClose(result.nearest_position, api::InertialPosition(150., -50., 0.), kLinearTolerance)));
   EXPECT_NEAR(result.distance, 0., kVeryExact);
 
   // ToLanePosition
   result = l1->ToLanePosition(point_within_lane);
-  EXPECT_TRUE(
-      api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, api::InertialPosition(150., -50., 0.),
-                                                 kLinearTolerance));
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(
+      api::IsInertialPositionClose(result.nearest_position, api::InertialPosition(150., -50., 0.), kLinearTolerance)));
   EXPECT_NEAR(result.distance, 0., kVeryExact);
 
   // Case 2: Tests LineLane::ToSegmentPosition() with a closest point that lies
@@ -156,23 +160,23 @@ TEST_P(MultilaneLanesParamTest, FlatLineLane) {
 
   // ToSegmentPosition
   result = l1->ToSegmentPosition(point_outside_lane);
-  EXPECT_TRUE(api::test::IsLanePositionClose(
-      result.lane_position, api::LanePosition(0., expected_r_outside_segment, kMaxHeight), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+      result.lane_position, api::LanePosition(0., expected_r_outside_segment, kMaxHeight), kVeryExact)));
   const math::Vector3 extreme_segment_point = math::Vector3(100., -75, 0.0) + r_offset_vector +
                                               kHalfWidth * r_vector.normalized() + math::Vector3(0., 0., kMaxHeight);
-  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position,
-                                                 api::InertialPosition::FromXyz(extreme_segment_point), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition::FromXyz(extreme_segment_point), kVeryExact)));
   EXPECT_NEAR(result.distance, (point_outside_lane.xyz() - extreme_segment_point).norm(), kVeryExact);
 
   // ToLanePosition
   const double expected_r_outside_lane = kHalfLaneWidth;
   result = l1->ToLanePosition(point_outside_lane);
-  EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
-                                             api::LanePosition(0., expected_r_outside_lane, kMaxHeight), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+      result.lane_position, api::LanePosition(0., expected_r_outside_lane, kMaxHeight), kVeryExact)));
   const math::Vector3 extreme_lane_point = math::Vector3(100., -75, 0.0) + r_offset_vector +
                                            kHalfLaneWidth * r_vector.normalized() + math::Vector3(0., 0., kMaxHeight);
-  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position,
-                                                 api::InertialPosition::FromXyz(extreme_lane_point), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
+      result.nearest_position, api::InertialPosition::FromXyz(extreme_lane_point), kVeryExact)));
   EXPECT_NEAR(result.distance, (point_outside_lane.xyz() - extreme_lane_point).norm(), kVeryExact);
 
   // Case 3: Tests LineLane::ToSegmentPosition() at a non-zero but flat elevation.
@@ -187,45 +191,45 @@ TEST_P(MultilaneLanesParamTest, FlatLineLane) {
   Lane* l1_with_z = s2->NewLane(api::LaneId{"l1_with_z"}, r0, {-kHalfLaneWidth, kHalfLaneWidth});
 
   result = l1_with_z->ToSegmentPosition(point_outside_lane);
-  EXPECT_TRUE(api::test::IsLanePositionClose(
-      result.lane_position, api::LanePosition(0., expected_r_outside_segment, kMaxHeight), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+      result.lane_position, api::LanePosition(0., expected_r_outside_segment, kMaxHeight), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       result.nearest_position, api::InertialPosition::FromXyz(extreme_segment_point + math::Vector3(0., 0., elevation)),
-      kVeryExact));
+      kVeryExact)));
   EXPECT_NEAR(result.distance,
               (point_outside_lane.xyz() - extreme_segment_point - math::Vector3(0., 0., elevation)).norm(), kVeryExact);
 
   // Verifies the output of LineLane::GetOrientation().
-  EXPECT_TRUE(api::test::IsRotationClose(l1->GetOrientation({0., 0., 0.}),
-                                         api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l1->GetOrientation({0., 0., 0.}),
+                                                 api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsRotationClose(l1->GetOrientation({1., 0., 0.}),
-                                         api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l1->GetOrientation({1., 0., 0.}),
+                                                 api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsRotationClose(l1->GetOrientation({0., 1., 0.}),
-                                         api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l1->GetOrientation({0., 1., 0.}),
+                                                 api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsRotationClose(l1->GetOrientation({l1->length(), 0., 0.}),
-                                         api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l1->GetOrientation({l1->length(), 0., 0.}),
+                                                 api::Rotation::FromRpy(0., 0., std::atan2(50., 100.)), kVeryExact)));
 
   // Derivative map should be identity (for a flat, straight road).
-  EXPECT_TRUE(api::test::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
-                                             api::LanePosition(0., 0., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
+                                                     api::LanePosition(0., 0., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
-                                             api::LanePosition(1., 0., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
+                                                     api::LanePosition(1., 0., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
-                                             api::LanePosition(0., 1., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
+                                                     api::LanePosition(0., 1., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
-                                             api::LanePosition(0., 0., 1.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
+                                                     api::LanePosition(0., 0., 1.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {1., 1., 1.}),
-                                             api::LanePosition(1., 1., 1.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l1->EvalMotionDerivatives({0., 0., 0.}, {1., 1., 1.}),
+                                                     api::LanePosition(1., 1., 1.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l1->EvalMotionDerivatives({10., 5., 3.}, {1., 2., 3.}),
-                                             api::LanePosition(1., 2., 3.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l1->EvalMotionDerivatives({10., 5., 3.}, {1., 2., 3.}),
+                                                     api::LanePosition(1., 2., 3.), kVeryExact)));
 }
 
 namespace {
@@ -374,10 +378,12 @@ TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
 
   EXPECT_NEAR(l1->length(), corkscrew_curve.length(), kLinearTolerance);
 
+  EXPECT_TRUE(AssertCompare(
+      api::IsRBoundsClose(l1->lane_bounds(0.), api::RBounds(-kHalfLaneWidth, kHalfLaneWidth), kVeryExact)));
   EXPECT_TRUE(
-      api::test::IsRBoundsClose(l1->lane_bounds(0.), api::RBounds(-kHalfLaneWidth, kHalfLaneWidth), kVeryExact));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l1->segment_bounds(0.), api::RBounds(-kHalfWidth, kHalfWidth), kVeryExact));
-  EXPECT_TRUE(api::test::IsHBoundsClose(l1->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact));
+      AssertCompare(api::IsRBoundsClose(l1->segment_bounds(0.), api::RBounds(-kHalfWidth, kHalfWidth), kVeryExact)));
+  EXPECT_TRUE(
+      AssertCompare(api::IsHBoundsClose(l1->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact)));
 
   const api::IsoLaneVelocity lane_velocity(1., 10., 100.);
   const math::Vector3 lane_velocity_as_vector(lane_velocity.sigma_v, lane_velocity.rho_v, lane_velocity.eta_v);
@@ -402,29 +408,29 @@ TEST_P(MultilaneLanesParamTest, CorkScrewLane) {
         // Checks position in the (x, y, z) frame i.e. world
         // down to kLinearTolerance accuracy (as that's the
         // tolerance the RoadGeometry was constructed with).
-        EXPECT_TRUE(api::test::IsInertialPositionClose(
+        EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
             l1->ToInertialPosition(lane_position),
             api::InertialPosition::FromXyz(
                 {position_at_srh_drake.x(), position_at_srh_drake.y(), position_at_srh_drake.z()}),
-            kLinearTolerance));
+            kLinearTolerance)));
 
         // Checks orientation in the (x, y, z) frame i.e. world
         // down to kAngularTolerance accuracy (as that's the
         // tolerance the RoadGeometry was constructed with).
-        EXPECT_TRUE(api::test::IsRotationClose(
-            l1->GetOrientation(lane_position),
-            api::Rotation::FromRpy(
-                {orientation_at_srh_drake.x(), orientation_at_srh_drake.y(), orientation_at_srh_drake.z()}),
-            kAngularTolerance));
+        EXPECT_TRUE(AssertCompare(
+            api::IsRotationClose(l1->GetOrientation(lane_position),
+                                 api::Rotation::FromRpy({orientation_at_srh_drake.x(), orientation_at_srh_drake.y(),
+                                                         orientation_at_srh_drake.z()}),
+                                 kAngularTolerance)));
 
         // Checks motion derivatives in the (s, r, h) frame i.e.
         // lane down to kLinearTolerance accuracy (as that's
         // the tolerance the RoadGeometry was constructed with).
-        EXPECT_TRUE(api::test::IsLanePositionClose(
+        EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
             l1->EvalMotionDerivatives(lane_position, lane_velocity),
             api::LanePosition::FromSrh({motion_derivative_at_srh_drake.x(), motion_derivative_at_srh_drake.y(),
                                         motion_derivative_at_srh_drake.z()}),
-            kLinearTolerance));
+            kLinearTolerance)));
 
         // TODO(hidmic): Add Lane::ToLanePosition() tests when the zero
         //               superelevation restriction in Multilane is lifted.
@@ -459,36 +465,38 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
 
   EXPECT_NEAR(l2->length(), offset_radius * d_theta, kVeryExact);
 
+  EXPECT_TRUE(AssertCompare(
+      api::IsRBoundsClose(l2->lane_bounds(0.), api::RBounds(-kHalfLaneWidth, kHalfLaneWidth), kVeryExact)));
   EXPECT_TRUE(
-      api::test::IsRBoundsClose(l2->lane_bounds(0.), api::RBounds(-kHalfLaneWidth, kHalfLaneWidth), kVeryExact));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l2->segment_bounds(0.), api::RBounds(-kHalfWidth, kHalfWidth), kVeryExact));
-  EXPECT_TRUE(api::test::IsHBoundsClose(l2->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact));
+      AssertCompare(api::IsRBoundsClose(l2->segment_bounds(0.), api::RBounds(-kHalfWidth, kHalfWidth), kVeryExact)));
+  EXPECT_TRUE(
+      AssertCompare(api::IsHBoundsClose(l2->elevation_bounds(0., 0.), api::HBounds(0., kMaxHeight), kVeryExact)));
   // Recall that the arc has center (100, -75).
   const math::Vector3 inertial_center(100., -75., 0.);
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l2->ToInertialPosition({0., 0., 0.}),
       api::InertialPosition::FromXyz(inertial_center +
                                      math::Vector3(std::cos(theta0), std::sin(theta0), 0.0) * offset_radius),
-      kLinearTolerance));
+      kLinearTolerance)));
 
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l2->ToInertialPosition({1., 0., 0.}),
       api::InertialPosition::FromXyz(inertial_center +
                                      math::Vector3(offset_radius * std::cos(theta0 + 1.0 / offset_radius),
                                                    offset_radius * std::sin(theta0 + 1.0 / offset_radius), 0.0)),
-      kLinearTolerance));
+      kLinearTolerance)));
 
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l2->ToInertialPosition({0., 1., 0.}),
       api::InertialPosition::FromXyz(inertial_center + math::Vector3((offset_radius - 1.) * std::cos(theta0),
                                                                      (offset_radius - 1.) * std::sin(theta0), 0.0)),
-      kLinearTolerance));
+      kLinearTolerance)));
 
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l2->ToInertialPosition({l2->length(), 0., 0.}),
       api::InertialPosition::FromXyz(inertial_center + math::Vector3(offset_radius * std::cos(theta0 + d_theta),
                                                                      offset_radius * std::sin(theta0 + d_theta), 0.0)),
-      kLinearTolerance));
+      kLinearTolerance)));
 
   // Case 1: Tests ArcLane::ToSegmentPosition() with a closest point that lies
   // within the lane bounds.
@@ -496,14 +504,14 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
   const double expected_s = 0.5 * M_PI / d_theta * l2->length();
   const double expected_r = std::min(offset_radius - std::sqrt(2) * 50., kHalfWidth);
   api::LanePositionResult result = l2->ToSegmentPosition(point_within_lane);
-  EXPECT_TRUE(
-      api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       result.nearest_position,
       api::InertialPosition::FromXyz(inertial_center +
                                      math::Vector3((offset_radius - kHalfWidth) * std::cos(0.5 * M_PI + theta0),
                                                    (offset_radius - kHalfWidth) * std::sin(0.5 * M_PI + theta0), 0.)),
-      kVeryExact));
+      kVeryExact)));
   EXPECT_NEAR(result.distance, (offset_radius - kHalfWidth) - std::sqrt(std::pow(50., 2.) + std::pow(50., 2.)),
               kVeryExact);
 
@@ -512,14 +520,14 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
   const api::InertialPosition point_outside_lane{center[0] + 200., center[1] - 20., 20.};  // θ ~= 1.9π.
   const double expected_r_outside = -kHalfWidth;
   result = l2->ToSegmentPosition(point_outside_lane);
-  EXPECT_TRUE(api::test::IsLanePositionClose(
-      result.lane_position, api::LanePosition(l2->length(), expected_r_outside, kMaxHeight), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+      result.lane_position, api::LanePosition(l2->length(), expected_r_outside, kMaxHeight), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       result.nearest_position,
       api::InertialPosition::FromXyz(
           inertial_center + math::Vector3((offset_radius + kHalfWidth) * std::cos(theta0 + d_theta),
                                           (offset_radius + kHalfWidth) * std::sin(theta0 + d_theta), kMaxHeight)),
-      kVeryExact));
+      kVeryExact)));
   EXPECT_DOUBLE_EQ(result.distance, (result.nearest_position.xyz() - point_outside_lane.xyz()).norm());
 
   // Case 3: Tests ArcLane::ToSegmentPosition() at a non-zero but flat elevation.
@@ -532,15 +540,15 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
                                  {0., kMaxHeight});
   Lane* l2_with_z = s2->NewLane(api::LaneId{"l2_with_z"}, r0, {-kHalfLaneWidth, kHalfLaneWidth});
   result = l2_with_z->ToSegmentPosition(point_outside_lane);
-  EXPECT_TRUE(api::test::IsLanePositionClose(
-      result.lane_position, api::LanePosition(l2_with_z->length(), expected_r_outside, kMaxHeight), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+      result.lane_position, api::LanePosition(l2_with_z->length(), expected_r_outside, kMaxHeight), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       result.nearest_position,
       api::InertialPosition::FromXyz(inertial_center +
                                      math::Vector3((offset_radius + kHalfWidth) * std::cos(theta0 + d_theta),
                                                    (offset_radius + kHalfWidth) * std::sin(theta0 + d_theta),
                                                    kMaxHeight + elevation)),
-      kVeryExact));
+      kVeryExact)));
   EXPECT_DOUBLE_EQ(result.distance, (result.nearest_position.xyz() - point_outside_lane.xyz()).norm());
 
   // Case 4: Tests ArcLane::ToSegmentPosition() with a lane that overlaps itself.
@@ -553,14 +561,14 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
                                  {0., kMaxHeight});
   Lane* l2_overlapping = s3->NewLane(api::LaneId{"l2_overlapping"}, r0, {-kHalfLaneWidth, kHalfLaneWidth});
   result = l2_overlapping->ToSegmentPosition(point_within_lane);
-  EXPECT_TRUE(
-      api::test::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(result.lane_position, api::LanePosition(expected_s, expected_r, 0.), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       result.nearest_position,
       api::InertialPosition::FromXyz(inertial_center +
                                      math::Vector3((offset_radius - kHalfWidth) * std::cos(0.5 * M_PI + theta0),
                                                    (offset_radius - kHalfWidth) * std::sin(0.5 * M_PI + theta0), 0.)),
-      kVeryExact));
+      kVeryExact)));
 
   EXPECT_NEAR(result.distance, (offset_radius - kHalfWidth) - std::sqrt(std::pow(50., 2.) + std::pow(50., 2.)),
               kVeryExact);
@@ -584,52 +592,53 @@ TEST_P(MultilaneLanesParamTest, FlatArcLane) {
   const double expected_s_wrap = std::abs(0.1 * M_PI / d_theta_wrap) * l2_wrap->length();
   const double expected_r_wrap = 2.;
   result = l2_wrap->ToLanePosition(point_in_third_quadrant);
-  EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
-                                             api::LanePosition(expected_s_wrap, expected_r_wrap, 0.), kVeryExact));
-  EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, point_in_third_quadrant, kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+      result.lane_position, api::LanePosition(expected_s_wrap, expected_r_wrap, 0.), kVeryExact)));
+  EXPECT_TRUE(
+      AssertCompare(api::IsInertialPositionClose(result.nearest_position, point_in_third_quadrant, kVeryExact)));
 
   EXPECT_NEAR(result.distance, 0. /* within lane */, kVeryExact);
 
   // Verifies the output of ArcLane::GetOrientation().
-  EXPECT_TRUE(api::test::IsRotationClose(l2->GetOrientation({0., 0., 0.}),
-                                         api::Rotation::FromRpy(0., 0., (0.25 + 0.5) * M_PI), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l2->GetOrientation({0., 0., 0.}),
+                                                 api::Rotation::FromRpy(0., 0., (0.25 + 0.5) * M_PI), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsRotationClose(l2->GetOrientation({0., 1., 0.}),
-                                         api::Rotation::FromRpy(0., 0., (0.25 + 0.5) * M_PI), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l2->GetOrientation({0., 1., 0.}),
+                                                 api::Rotation::FromRpy(0., 0., (0.25 + 0.5) * M_PI), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsRotationClose(l2->GetOrientation({l2->length(), 0., 0.}),
-                                         api::Rotation::FromRpy(0., 0, 0.25 * M_PI),
-                                         kVeryExact));  // 0.25 + 1.5 + 0.5
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l2->GetOrientation({l2->length(), 0., 0.}),
+                                                 api::Rotation::FromRpy(0., 0, 0.25 * M_PI),
+                                                 kVeryExact)));  // 0.25 + 1.5 + 0.5
 
   // For r=0, derivative map should be identity.
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
-                                             api::LanePosition(0., 0., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
+                                                     api::LanePosition(0., 0., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
-                                             api::LanePosition(1., 0., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
+                                                     api::LanePosition(1., 0., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
-                                             api::LanePosition(0., 1., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
+                                                     api::LanePosition(0., 1., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
-                                             api::LanePosition(0., 0., 1.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
+                                                     api::LanePosition(0., 0., 1.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({l2->length(), 0., 0.}, {1., 1., 1.}),
-                                             api::LanePosition(1., 1., 1.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({l2->length(), 0., 0.}, {1., 1., 1.}),
+                                                     api::LanePosition(1., 1., 1.), kVeryExact)));
   // For a left-turning curve, r = +10 will decrease the radius of the path
   // from the original 100 down to 90.
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 10., 0.}, {1., 1., 1.}),
-                                             api::LanePosition((offset_radius / (offset_radius - 10.0)) * 1., 1., 1.),
-                                             kVeryExact));
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 10., 0.}, {1., 1., 1.}),
+                               api::LanePosition((offset_radius / (offset_radius - 10.0)) * 1., 1., 1.), kVeryExact)));
   // Likewise, r = -10 will increase the radius of the path from the
   // original 100 up to 110.
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., -10., 0.}, {1., 1., 1.}),
-                                             api::LanePosition(offset_radius / (offset_radius + 10.) * 1., 1., 1.),
-                                             kVeryExact));
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(l2->EvalMotionDerivatives({0., -10., 0.}, {1., 1., 1.}),
+                               api::LanePosition(offset_radius / (offset_radius + 10.) * 1., 1., 1.), kVeryExact)));
   // ...and only r should matter for an otherwise flat arc.
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({l2->length(), -10., 100.}, {1., 1., 1.}),
-                                             api::LanePosition(offset_radius / (offset_radius + 10.), 1., 1.),
-                                             kVeryExact));
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(l2->EvalMotionDerivatives({l2->length(), -10., 100.}, {1., 1., 1.}),
+                               api::LanePosition(offset_radius / (offset_radius + 10.), 1., 1.), kVeryExact)));
 }
 
 api::LanePosition IntegrateTrivially(const api::Lane* lane, const api::LanePosition& lp_initial,
@@ -680,16 +689,16 @@ TEST_P(MultilaneLanesParamTest, HillIntegration) {
   // Checks center lane endpoints' position in the world frame
   // against their analytically known values.
   const api::LanePosition kInitialLanePosition{0., 0., 0.};
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       center_lane->ToInertialPosition(kInitialLanePosition),
       api::InertialPosition(-100. + (offset_radius * std::cos(theta0)), -100. + (offset_radius * std::sin(theta0)), z0),
-      kLinearTolerance));
+      kLinearTolerance)));
 
   const api::LanePosition kFinalLanePosition{center_lane->length(), 0., 0.};
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       center_lane->ToInertialPosition(kFinalLanePosition),
       api::InertialPosition(-100. + (offset_radius * std::cos(theta1)), -100. + (offset_radius * std::sin(theta1)), z1),
-      kLinearTolerance));
+      kLinearTolerance)));
 
   // Checks EvalMotionDerivatives() accuracy. To that end, motion derivatives
   // are (1) queried for a given constant velocity σᵥ from the center lane at an
@@ -707,17 +716,17 @@ TEST_P(MultilaneLanesParamTest, HillIntegration) {
   const int kStepCountR = right_lane->length() / (kVelocity.sigma_v * kTimeStep);
   const api::LanePosition kInitialLanePositionR{0., -kLaneSpacing, 0.};
   const api::LanePosition kExpectedFinalLanePositionR{center_lane->length(), -kLaneSpacing, 0.};
-  EXPECT_TRUE(api::test::IsLanePositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
       IntegrateTrivially(center_lane, kInitialLanePositionR, kVelocity, kTimeStep, kStepCountR),
-      kExpectedFinalLanePositionR, kIntegrationTolerance));
+      kExpectedFinalLanePositionR, kIntegrationTolerance)));
 
   // Tests using the lane on the left side.
   const int kStepCountL = left_lane->length() / (kVelocity.sigma_v * kTimeStep);
   const api::LanePosition kInitialLanePositionL{0., kLaneSpacing, 0.};
   const api::LanePosition kExpectedFinalLanePositionL{center_lane->length(), kLaneSpacing, 0.};
-  EXPECT_TRUE(api::test::IsLanePositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
       IntegrateTrivially(center_lane, kInitialLanePositionL, kVelocity, kTimeStep, kStepCountL),
-      kExpectedFinalLanePositionL, kIntegrationTolerance));
+      kExpectedFinalLanePositionL, kIntegrationTolerance)));
 }
 
 INSTANTIATE_TEST_CASE_P(Offset, MultilaneLanesParamTest, testing::Values(0., 5., -5.));
@@ -745,65 +754,66 @@ GTEST_TEST(MultilaneLanesTest, ArcLaneWithConstantSuperelevation) {
 
   EXPECT_NEAR(l2->length(), 100. * 1.5 * M_PI, kVeryExact);
 
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l2->ToInertialPosition({0., 0., 0.}),
       api::InertialPosition(100. + (100. * std::cos(0.25 * M_PI)), -75. + (100. * std::sin(0.25 * M_PI)), 0.),
-      kLinearTolerance));
+      kLinearTolerance)));
 
   // NB: (1.25 * M_PI) is the direction of the r-axis at s = 0.
-  EXPECT_TRUE(api::test::IsInertialPositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
       l2->ToInertialPosition({0., 10., 0.}),
       api::InertialPosition(100. + (100. * std::cos(0.25 * M_PI)) + (10. * std::cos(kTheta) * std::cos(1.25 * M_PI)),
                             -75. + (100. * std::sin(0.25 * M_PI)) + (10. * std::cos(kTheta) * std::sin(1.25 * M_PI)),
                             10. * std::sin(kTheta)),
-      kLinearTolerance));
+      kLinearTolerance)));
 
   // TODO(maddog@tri.global) Test ToLanePosition().
 
-  EXPECT_TRUE(api::test::IsRotationClose(l2->GetOrientation({0., 0., 0.}),
-                                         api::Rotation::FromRpy(kTheta, 0., (0.25 + 0.5) * M_PI), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l2->GetOrientation({0., 0., 0.}),
+                                                 api::Rotation::FromRpy(kTheta, 0., (0.25 + 0.5) * M_PI), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsRotationClose(l2->GetOrientation({0., 1., 0.}),
-                                         api::Rotation::FromRpy(kTheta, 0., (0.25 + 0.5) * M_PI), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l2->GetOrientation({0., 1., 0.}),
+                                                 api::Rotation::FromRpy(kTheta, 0., (0.25 + 0.5) * M_PI), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsRotationClose(l2->GetOrientation({l2->length(), 0., 0.}),
-                                         api::Rotation::FromRpy(kTheta, 0., 0.25 * M_PI),
-                                         kVeryExact));  // 0.25 + 1.5 + 0.5
+  EXPECT_TRUE(AssertCompare(api::IsRotationClose(l2->GetOrientation({l2->length(), 0., 0.}),
+                                                 api::Rotation::FromRpy(kTheta, 0., 0.25 * M_PI),
+                                                 kVeryExact)));  // 0.25 + 1.5 + 0.5
 
   api::LanePosition pdot;
   // For r=0, derivative map should be identity.
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
-                                             api::LanePosition(0., 0., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
+                                                     api::LanePosition(0., 0., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
-                                             api::LanePosition(1., 0., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
+                                                     api::LanePosition(1., 0., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
-                                             api::LanePosition(0., 1., 0.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
+                                                     api::LanePosition(0., 1., 0.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
-                                             api::LanePosition(0., 0., 1.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
+                                                     api::LanePosition(0., 0., 1.), kVeryExact)));
 
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({l2->length(), 0., 0.}, {1., 1., 1.}),
-                                             api::LanePosition(1., 1., 1.), kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l2->EvalMotionDerivatives({l2->length(), 0., 0.}, {1., 1., 1.}),
+                                                     api::LanePosition(1., 1., 1.), kVeryExact)));
 
   // For a left-turning curve, r = +10 will decrease the radius of the path
   // from the original 100 down to almost 90.  (r is scaled by the cosine of
   // the superelevation since it is no longer horizontal).
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., 10., 0.}, {1., 1., 1.}),
-                                             api::LanePosition((100. / (100. - (10. * std::cos(kTheta)))) * 1., 1., 1.),
-                                             kVeryExact));
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+      l2->EvalMotionDerivatives({0., 10., 0.}, {1., 1., 1.}),
+      api::LanePosition((100. / (100. - (10. * std::cos(kTheta)))) * 1., 1., 1.), kVeryExact)));
   // Likewise, r = -10 will increase the radius of the path from the
   // original 100 up to almost 110 (since r is no longer horizontal).
-  EXPECT_TRUE(api::test::IsLanePositionClose(l2->EvalMotionDerivatives({0., -10., 0.}, {1., 1., 1.}),
-                                             api::LanePosition((100. / (100 + (10. * std::cos(kTheta)))) * 1., 1., 1.),
-                                             kVeryExact));
+  EXPECT_TRUE(AssertCompare(
+      api::IsLanePositionClose(l2->EvalMotionDerivatives({0., -10., 0.}, {1., 1., 1.}),
+                               api::LanePosition((100. / (100 + (10. * std::cos(kTheta)))) * 1., 1., 1.), kVeryExact)));
 
   // h matters, too (because hovering above a tilted road changes one's
   // distance to the center of the arc).
-  EXPECT_TRUE(api::test::IsLanePositionClose(
+  EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
       l2->EvalMotionDerivatives({l2->length(), -10., 8.}, {1., 1., 1.}),
-      api::LanePosition((100. / (100 + (10. * std::cos(kTheta)) + (8. * std::sin(kTheta)))) * 1., 1., 1.), kVeryExact));
+      api::LanePosition((100. / (100 + (10. * std::cos(kTheta)) + (8. * std::sin(kTheta)))) * 1., 1., 1.),
+      kVeryExact)));
 }
 
 class MultilaneMultipleLanesTest : public ::testing::Test {
@@ -861,13 +871,13 @@ TEST_F(MultilaneMultipleLanesTest, MultipleLineLanes) {
   for (const Lane* lane : lanes) {
     for (const double p : p_vector) {
       for (const double r : r_offset_vector) {
-        EXPECT_TRUE(api::test::IsInertialPositionClose(
+        EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
             lane->ToInertialPosition({p * lane_length, r, 0.}),
             api::InertialPosition::FromXyz(math::Vector3(100., -75., 0.) + (p * lane_length) * s_vector +
                                            (kR0 + lane_spacing + r) * r_vector),
-            kVeryExact));
-        EXPECT_TRUE(api::test::IsRotationClose(lane->GetOrientation({p * lane_length, r, 0.}),
-                                               api::Rotation::FromRpy(0., 0., theta), kVeryExact));
+            kVeryExact)));
+        EXPECT_TRUE(AssertCompare(api::IsRotationClose(lane->GetOrientation({p * lane_length, r, 0.}),
+                                                       api::Rotation::FromRpy(0., 0., theta), kVeryExact)));
       }
     }
     lane_spacing += kRSpacing;
@@ -883,9 +893,9 @@ TEST_F(MultilaneMultipleLanesTest, MultipleLineLanes) {
             math::Vector3(100., -75., 0.) + (p * lane_length) * s_vector + (kR0 + lane_spacing + r) * r_vector);
 
         const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
-        EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position, api::LanePosition(p * lane_length, r, 0.),
-                                                   kVeryExact));
-        EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, inertial_point, kVeryExact));
+        EXPECT_TRUE(AssertCompare(
+            api::IsLanePositionClose(result.lane_position, api::LanePosition(p * lane_length, r, 0.), kVeryExact)));
+        EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(result.nearest_position, inertial_point, kVeryExact)));
         EXPECT_NEAR(result.distance, 0., kVeryExact);
       }
     }
@@ -901,33 +911,33 @@ TEST_F(MultilaneMultipleLanesTest, MultipleLineLanes) {
           api::InertialPosition::FromXyz(math::Vector3(100., -75., 0.) + (p * lane_length) * s_vector);
       const double expected_r = lane->segment_bounds(0.).min();
       const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
-      EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
-                                                 api::LanePosition(p * lane_length, expected_r, 0.), kVeryExact));
-      EXPECT_TRUE(api::test::IsInertialPositionClose(
-          result.nearest_position,
-          api::InertialPosition::FromXyz(math::Vector3(100., -75., 0.) + (p * lane_length) * s_vector +
-                                         kRMin * r_vector),
-          kVeryExact));
+      EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+          result.lane_position, api::LanePosition(p * lane_length, expected_r, 0.), kVeryExact)));
+      EXPECT_TRUE(AssertCompare(
+          api::IsInertialPositionClose(result.nearest_position,
+                                       api::InertialPosition::FromXyz(math::Vector3(100., -75., 0.) +
+                                                                      (p * lane_length) * s_vector + kRMin * r_vector),
+                                       kVeryExact)));
       EXPECT_NEAR(result.distance, kRMin, kVeryExact);
     }
   }
 
   // Derivative map should be identity (for a flat, straight road).
   for (const Lane* lane : lanes) {
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
-                                               api::LanePosition(0., 0., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
+                                                       api::LanePosition(0., 0., 0.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
-                                               api::LanePosition(1., 0., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
+                                                       api::LanePosition(1., 0., 0.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
-                                               api::LanePosition(0., 1., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
+                                                       api::LanePosition(0., 1., 0.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
-                                               api::LanePosition(0., 0., 1.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
+                                                       api::LanePosition(0., 0., 1.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(l1->EvalMotionDerivatives({10., 5., 3.}, {1., 2., 3.}),
-                                               api::LanePosition(1., 2., 3.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(l1->EvalMotionDerivatives({10., 5., 3.}, {1., 2., 3.}),
+                                                       api::LanePosition(1., 2., 3.), kVeryExact)));
   }
 }
 
@@ -983,15 +993,15 @@ TEST_F(MultilaneMultipleLanesTest, MultipleArcLanes) {
       for (const double r : r_offset_vector) {
         const double effective_radius = radius - r;
         const double effective_angle = p * kDTheta + kTheta0;
-        EXPECT_TRUE(api::test::IsInertialPositionClose(
+        EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
             lane->ToInertialPosition({p * radius * kDTheta, r, 0.}),
             api::InertialPosition::FromXyz(kGeoCenter + effective_radius * math::Vector3(std::cos(effective_angle),
                                                                                          std::sin(effective_angle),
                                                                                          0.)),
-            kVeryExact));
-        EXPECT_TRUE(api::test::IsRotationClose(
+            kVeryExact)));
+        EXPECT_TRUE(AssertCompare(api::IsRotationClose(
             lane->GetOrientation({p * radius * kDTheta, r, 0.}),
-            api::Rotation::FromRpy(0., 0., wrap_angle(effective_angle + (0.5 * M_PI))), kVeryExact));
+            api::Rotation::FromRpy(0., 0., wrap_angle(effective_angle + (0.5 * M_PI))), kVeryExact)));
       }
     }
   }
@@ -1008,9 +1018,9 @@ TEST_F(MultilaneMultipleLanesTest, MultipleArcLanes) {
         const api::InertialPosition inertial_point = api::InertialPosition::FromXyz(
             kGeoCenter + effective_radius * math::Vector3(std::cos(effective_angle), std::sin(effective_angle), 0.));
         const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
-        EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position, api::LanePosition(p * radius * kDTheta, r, 0.),
-                                                   kVeryExact));
-        EXPECT_TRUE(api::test::IsInertialPositionClose(result.nearest_position, inertial_point, kVeryExact));
+        EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+            result.lane_position, api::LanePosition(p * radius * kDTheta, r, 0.), kVeryExact)));
+        EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(result.nearest_position, inertial_point, kVeryExact)));
         EXPECT_NEAR(result.distance, 0., kVeryExact);
       }
     }
@@ -1028,13 +1038,13 @@ TEST_F(MultilaneMultipleLanesTest, MultipleArcLanes) {
           kGeoCenter + kRadius * math::Vector3(std::cos(effective_angle), std::sin(effective_angle), 0.));
       const double expected_r = lane->segment_bounds(0.).min();
       const api::LanePositionResult result = lane->ToSegmentPosition(inertial_point);
-      EXPECT_TRUE(api::test::IsLanePositionClose(result.lane_position,
-                                                 api::LanePosition(p * radius * kDTheta, expected_r, 0.), kVeryExact));
-      EXPECT_TRUE(api::test::IsInertialPositionClose(
+      EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(
+          result.lane_position, api::LanePosition(p * radius * kDTheta, expected_r, 0.), kVeryExact)));
+      EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
           result.nearest_position,
           api::InertialPosition::FromXyz(
               kGeoCenter + (kRadius - kRMin) * math::Vector3(std::cos(effective_angle), std::sin(effective_angle), 0.)),
-          kVeryExact));
+          kVeryExact)));
       EXPECT_NEAR(result.distance, kRMin, kVeryExact);
     }
   }
@@ -1045,27 +1055,30 @@ TEST_F(MultilaneMultipleLanesTest, MultipleArcLanes) {
     const double radius = lane_radius[i];
 
     // For r=0, derivative map should be identity.
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
-                                               api::LanePosition(0., 0., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 0.}),
+                                                       api::LanePosition(0., 0., 0.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
-                                               api::LanePosition(1., 0., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {1., 0., 0.}),
+                                                       api::LanePosition(1., 0., 0.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
-                                               api::LanePosition(0., 1., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 1., 0.}),
+                                                       api::LanePosition(0., 1., 0.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
-                                               api::LanePosition(0., 0., 1.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., 0., 0.}, {0., 0., 1.}),
+                                                       api::LanePosition(0., 0., 1.), kVeryExact)));
 
-    EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({lane->length(), 0., 0.}, {1., 1., 1.}),
-                                               api::LanePosition(1., 1., 1.), kVeryExact));
+    EXPECT_TRUE(
+        AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({lane->length(), 0., 0.}, {1., 1., 1.}),
+                                               api::LanePosition(1., 1., 1.), kVeryExact)));
 
     // Checks motion derivatives at different offsets from Lane's centerline.
     for (const double r : r_offset_vector) {
-      EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({0., r, 0.}, {1., 1., 1.}),
-                                                 api::LanePosition((radius / (radius - r)) * 1., 1., 1.), kVeryExact));
-      EXPECT_TRUE(api::test::IsLanePositionClose(lane->EvalMotionDerivatives({lane->length(), r, 100.}, {1., 1., 1.}),
-                                                 api::LanePosition(radius / (radius - r), 1., 1.), kVeryExact));
+      EXPECT_TRUE(
+          AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({0., r, 0.}, {1., 1., 1.}),
+                                                 api::LanePosition((radius / (radius - r)) * 1., 1., 1.), kVeryExact)));
+      EXPECT_TRUE(
+          AssertCompare(api::IsLanePositionClose(lane->EvalMotionDerivatives({lane->length(), r, 100.}, {1., 1., 1.}),
+                                                 api::LanePosition(radius / (radius - r), 1., 1.), kVeryExact)));
     }
   }
 }

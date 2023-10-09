@@ -29,7 +29,6 @@ target_link_libraries(test_utilities
   PUBLIC
     maliput::api
     maliput::common
-    maliput::test_utilities
     maliput::math
     maliput_multilane
   PRIVATE

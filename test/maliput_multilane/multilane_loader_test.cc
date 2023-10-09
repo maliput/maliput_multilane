@@ -46,7 +46,6 @@
 #include <maliput/api/lane.h>
 #include <maliput/api/road_geometry.h>
 #include <maliput/api/segment.h>
-#include <maliput/test_utilities/maliput_types_compare.h>
 
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/connection.h"

@@ -34,13 +34,16 @@
 #include <gtest/gtest.h>
 #include <maliput/api/lane_data.h>
 #include <maliput/common/assertion_error.h>
-#include <maliput/test_utilities/maliput_math_compare.h>
+#include <maliput/math/compare.h>
+
+#include "assert_compare.h"
 
 namespace maliput {
 namespace multilane {
 namespace {
 
-using maliput::math::test::CompareVectors;
+using maliput::math::CompareVectors;
+using maliput::multilane::test::AssertCompare;
 
 class MultilaneArcRoadCurveTest : public ::testing::Test {
  protected:
@@ -116,25 +119,27 @@ TEST_F(MultilaneArcRoadCurveTest, ArcGeometryTest) {
   EXPECT_THROW(p_from_s_at_r(2. * offset_line_length), maliput::common::assertion_error);
 
   // Checks the evaluation of xy at different values over the reference curve.
-  EXPECT_TRUE(CompareVectors(
-      dut.xy_of_p(0.0), kCenter + math::Vector2(kRadius * std::cos(kTheta0), kRadius * std::sin(kTheta0)), kVeryExact));
-  EXPECT_TRUE(CompareVectors(
+  EXPECT_TRUE(AssertCompare(
+      CompareVectors(dut.xy_of_p(0.0),
+                     kCenter + math::Vector2(kRadius * std::cos(kTheta0), kRadius * std::sin(kTheta0)), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       dut.xy_of_p(0.5),
       kCenter + math::Vector2(kRadius * std::cos(kTheta0 + kDTheta * 0.5), kRadius * std::sin(kTheta0 + kDTheta * 0.5)),
-      kVeryExact));
-  EXPECT_TRUE(CompareVectors(
-      dut.xy_of_p(1.0), kCenter + math::Vector2(kRadius * std::cos(kTheta1), kRadius * std::sin(kTheta1)), kVeryExact));
+      kVeryExact)));
+  EXPECT_TRUE(AssertCompare(
+      CompareVectors(dut.xy_of_p(1.0),
+                     kCenter + math::Vector2(kRadius * std::cos(kTheta1), kRadius * std::sin(kTheta1)), kVeryExact)));
   // Checks the derivative of xy at different values over the reference curve.
-  EXPECT_TRUE(CompareVectors(
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       dut.xy_dot_of_p(0.0),
-      math::Vector2(-kRadius * std::sin(kTheta0) * kDTheta, kRadius * std::cos(kTheta0) * kDTheta), kVeryExact));
-  EXPECT_TRUE(CompareVectors(dut.xy_dot_of_p(0.5),
-                             math::Vector2(-kRadius * std::sin(kTheta0 + 0.5 * kDTheta) * kDTheta,
-                                           kRadius * std::cos(kTheta0 + 0.5 * kDTheta) * kDTheta),
-                             kVeryExact));
-  EXPECT_TRUE(CompareVectors(
+      math::Vector2(-kRadius * std::sin(kTheta0) * kDTheta, kRadius * std::cos(kTheta0) * kDTheta), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(dut.xy_dot_of_p(0.5),
+                                           math::Vector2(-kRadius * std::sin(kTheta0 + 0.5 * kDTheta) * kDTheta,
+                                                         kRadius * std::cos(kTheta0 + 0.5 * kDTheta) * kDTheta),
+                                           kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       dut.xy_dot_of_p(1.0),
-      math::Vector2(-kRadius * std::sin(kTheta1) * kDTheta, kRadius * std::cos(kTheta1) * kDTheta), kVeryExact));
+      math::Vector2(-kRadius * std::sin(kTheta1) * kDTheta, kRadius * std::cos(kTheta1) * kDTheta), kVeryExact)));
   // Checks the heading at different values.
   EXPECT_NEAR(dut.heading_of_p(0.0), kTheta0 + M_PI / 2.0, kVeryExact);
   EXPECT_NEAR(dut.heading_of_p(0.5), kTheta0 + kDTheta / 2.0 + M_PI / 2.0, kVeryExact);
@@ -206,31 +211,33 @@ TEST_F(MultilaneArcRoadCurveTest, ToCurveFrameTest) {
   const ArcRoadCurve dut(kCenter, kRadius, kTheta0, kDTheta, zp, zp, kLinearTolerance, kScaleLength,
                          kComputationPolicy);
   // Checks points over the composed curve.
-  EXPECT_TRUE(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta0),
-                                                            kCenter[1] + kRadius * std::sin(kTheta0), 0.0),
-                                              kRMin, kRMax, height_bounds),
-                             math::Vector3(0.0, 0.0, 0.0), kVeryExact));
   EXPECT_TRUE(
+      AssertCompare(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta0),
+                                                                  kCenter[1] + kRadius * std::sin(kTheta0), 0.0),
+                                                    kRMin, kRMax, height_bounds),
+                                   math::Vector3(0.0, 0.0, 0.0), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(
       CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta0 + kDTheta / 2.0),
                                                     kCenter[1] + kRadius * std::sin(kTheta0 + kDTheta / 2.0), 0.0),
                                       kRMin, kRMax, height_bounds),
-                     math::Vector3(0.5, 0.0, 0.0), kVeryExact));
-  EXPECT_TRUE(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta1),
-                                                            kCenter[1] + kRadius * std::sin(kTheta1), 0.0),
-                                              kRMin, kRMax, height_bounds),
-                             math::Vector3(1., 0.0, 0.0), kVeryExact));
-  // Checks with lateral and vertical deviations.
+                     math::Vector3(0.5, 0.0, 0.0), kVeryExact)));
   EXPECT_TRUE(
+      AssertCompare(CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + kRadius * std::cos(kTheta1),
+                                                                  kCenter[1] + kRadius * std::sin(kTheta1), 0.0),
+                                                    kRMin, kRMax, height_bounds),
+                                   math::Vector3(1., 0.0, 0.0), kVeryExact)));
+  // Checks with lateral and vertical deviations.
+  EXPECT_TRUE(AssertCompare(
       CompareVectors(dut.ToCurveFrame(math::Vector3(kCenter[0] + (kRadius + 1.0) * std::cos(kTheta0 + M_PI / 8.0),
                                                     kCenter[1] + (kRadius + 1.0) * std::sin(kTheta0 + M_PI / 8.0), 6.0),
                                       kRMin, kRMax, height_bounds),
-                     math::Vector3(0.25, -1.0, 6.0), kVeryExact));
-  EXPECT_TRUE(CompareVectors(
+                     math::Vector3(0.25, -1.0, 6.0), kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       dut.ToCurveFrame(
           math::Vector3(kCenter[0] + (kRadius - 2.0) * std::cos(kTheta0 + kDTheta / 2.0 + M_PI / 8.0),
                         kCenter[1] + (kRadius - 2.0) * std::sin(kTheta0 + kDTheta / 2.0 + M_PI / 8.0), 3.0),
           kRMin, kRMax, height_bounds),
-      math::Vector3(0.75, 2.0, 3.0), kVeryExact));
+      math::Vector3(0.75, 2.0, 3.0), kVeryExact)));
 }
 
 // Checks that l_max(), p_from_s() and s_from_p() with constant
@@ -300,7 +307,7 @@ TEST_F(MultilaneArcRoadCurveTest, WorldFunction) {
         const double angle = kTheta0 + kDTheta * p;
         const math::Vector3 geo_position = kGeoCenter + kRadius * math::Vector3(std::cos(angle), std::sin(angle), 0.) +
                                            flat_rotation.apply({0., r, h});
-        EXPECT_TRUE(CompareVectors(flat_dut.W_of_prh(p, r, h), geo_position, kVeryExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(flat_dut.W_of_prh(p, r, h), geo_position, kVeryExact)));
       }
     }
   }
@@ -322,7 +329,7 @@ TEST_F(MultilaneArcRoadCurveTest, WorldFunction) {
         const double angle = kTheta0 + kDTheta * p;
         const math::Vector3 geo_position = kGeoCenter + kRadius * math::Vector3(std::cos(angle), std::sin(angle), 0.) +
                                            linear_elevation.f_p(p) * z_vector + elevated_rotation.apply({0., r, h});
-        EXPECT_TRUE(CompareVectors(elevated_dut.W_of_prh(p, r, h), geo_position, kVeryExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(elevated_dut.W_of_prh(p, r, h), geo_position, kVeryExact)));
       }
     }
   }
@@ -339,7 +346,7 @@ TEST_F(MultilaneArcRoadCurveTest, WorldFunction) {
         const double angle = kTheta0 + kDTheta * p;
         const math::Vector3 geo_position = kGeoCenter + kRadius * math::Vector3(std::cos(angle), std::sin(angle), 0.) +
                                            superelevated_rotation.apply({0., r, h});
-        EXPECT_TRUE(CompareVectors(superelevated_dut.W_of_prh(p, r, h), geo_position, kVeryExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(superelevated_dut.W_of_prh(p, r, h), geo_position, kVeryExact)));
       }
     }
   }
@@ -379,9 +386,9 @@ TEST_F(MultilaneArcRoadCurveTest, WorldFunctionDerivative) {
         const double g_prime = flat_dut.elevation().f_dot_p(p);
         const math::Vector3 w_prime = flat_dut.W_prime_of_prh(p, r, h, rotation, g_prime);
         const math::Vector3 numeric_w_prime = numeric_w_prime_of_prh(flat_dut, p, r, h);
-        EXPECT_TRUE(CompareVectors(w_prime, numeric_w_prime, kQuiteExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(w_prime, numeric_w_prime, kQuiteExact)));
         const math::Vector3 s_hat = flat_dut.s_hat_of_prh(p, r, h, rotation, g_prime);
-        EXPECT_TRUE(CompareVectors(w_prime.normalized(), s_hat, kVeryExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(w_prime.normalized(), s_hat, kVeryExact)));
       }
     }
   }
@@ -400,9 +407,9 @@ TEST_F(MultilaneArcRoadCurveTest, WorldFunctionDerivative) {
         const double g_prime = elevated_dut.elevation().f_dot_p(p);
         const math::Vector3 w_prime = elevated_dut.W_prime_of_prh(p, r, h, rotation, g_prime);
         const math::Vector3 numeric_w_prime = numeric_w_prime_of_prh(elevated_dut, p, r, h);
-        EXPECT_TRUE(CompareVectors(w_prime, numeric_w_prime, kQuiteExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(w_prime, numeric_w_prime, kQuiteExact)));
         const math::Vector3 s_hat = elevated_dut.s_hat_of_prh(p, r, h, rotation, g_prime);
-        EXPECT_TRUE(CompareVectors(w_prime.normalized(), s_hat, kVeryExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(w_prime.normalized(), s_hat, kVeryExact)));
       }
     }
   }
@@ -420,9 +427,9 @@ TEST_F(MultilaneArcRoadCurveTest, WorldFunctionDerivative) {
         const double g_prime = superelevated_dut.elevation().f_dot_p(p);
         const math::Vector3 w_prime = superelevated_dut.W_prime_of_prh(p, r, h, rotation, g_prime);
         const math::Vector3 numeric_w_prime = numeric_w_prime_of_prh(superelevated_dut, p, r, h);
-        EXPECT_TRUE(CompareVectors(w_prime, numeric_w_prime, kQuiteExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(w_prime, numeric_w_prime, kQuiteExact)));
         const math::Vector3 s_hat = superelevated_dut.s_hat_of_prh(p, r, h, rotation, g_prime);
-        EXPECT_TRUE(CompareVectors(w_prime.normalized(), s_hat, kVeryExact));
+        EXPECT_TRUE(AssertCompare(CompareVectors(w_prime.normalized(), s_hat, kVeryExact)));
       }
     }
   }
@@ -453,28 +460,31 @@ TEST_F(MultilaneArcRoadCurveTest, ReferenceCurveRotation) {
     EXPECT_NEAR(rotation.pitch(), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), 3. * M_PI / 4., kVeryExact);
     math::Vector3 r_hat = flat_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(-0.707106781186548, -0.707106781186548, 0.), kVeryExact));
+    EXPECT_TRUE(
+        AssertCompare(CompareVectors(r_hat, math::Vector3(-0.707106781186548, -0.707106781186548, 0.), kVeryExact)));
 
     rotation = flat_dut.Rabg_of_p(0.5);
     EXPECT_NEAR(rotation.roll(), kZeroRoll, kVeryExact);
     EXPECT_NEAR(rotation.pitch(), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -M_PI, kVeryExact);
     r_hat = flat_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(0., -1., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(CompareVectors(r_hat, math::Vector3(0., -1., 0.), kVeryExact)));
 
     rotation = flat_dut.Rabg_of_p(0.75);
     EXPECT_NEAR(rotation.roll(), kZeroRoll, kVeryExact);
     EXPECT_NEAR(rotation.pitch(), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -7. * M_PI / 8., kVeryExact);
     r_hat = flat_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(0.382683432365090, -0.923879532511287, 0.), kVeryExact));
+    EXPECT_TRUE(
+        AssertCompare(CompareVectors(r_hat, math::Vector3(0.382683432365090, -0.923879532511287, 0.), kVeryExact)));
 
     rotation = flat_dut.Rabg_of_p(1.);
     EXPECT_NEAR(rotation.roll(), kZeroRoll, kVeryExact);
     EXPECT_NEAR(rotation.pitch(), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -3. * M_PI / 4., kVeryExact);
     r_hat = flat_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(0.707106781186548, -0.707106781186548, 0.), kVeryExact));
+    EXPECT_TRUE(
+        AssertCompare(CompareVectors(r_hat, math::Vector3(0.707106781186548, -0.707106781186548, 0.), kVeryExact)));
   }
 
   // Checks for a linearly elevated curve.
@@ -493,28 +503,31 @@ TEST_F(MultilaneArcRoadCurveTest, ReferenceCurveRotation) {
     EXPECT_NEAR(wrap(rotation.pitch()), kElevationPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), 3. * M_PI / 4., kVeryExact);
     math::Vector3 r_hat = elevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(-0.707106781186548, -0.707106781186548, 0.), kVeryExact));
+    EXPECT_TRUE(
+        AssertCompare(CompareVectors(r_hat, math::Vector3(-0.707106781186548, -0.707106781186548, 0.), kVeryExact)));
 
     rotation = elevated_dut.Rabg_of_p(0.5);
     EXPECT_NEAR(rotation.roll(), kZeroRoll, kVeryExact);
     EXPECT_NEAR(wrap(rotation.pitch()), kElevationPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -M_PI, kVeryExact);
     r_hat = elevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(0., -1., 0.), kVeryExact));
+    EXPECT_TRUE(AssertCompare(CompareVectors(r_hat, math::Vector3(0., -1., 0.), kVeryExact)));
 
     rotation = elevated_dut.Rabg_of_p(0.75);
     EXPECT_NEAR(rotation.roll(), kZeroRoll, kVeryExact);
     EXPECT_NEAR(wrap(rotation.pitch()), kElevationPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -7. * M_PI / 8., kVeryExact);
     r_hat = elevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(0.382683432365090, -0.923879532511287, 0.), kVeryExact));
+    EXPECT_TRUE(
+        AssertCompare(CompareVectors(r_hat, math::Vector3(0.382683432365090, -0.923879532511287, 0.), kVeryExact)));
 
     rotation = elevated_dut.Rabg_of_p(1.);
     EXPECT_NEAR(rotation.roll(), kZeroRoll, kVeryExact);
     EXPECT_NEAR(wrap(rotation.pitch()), kElevationPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -3. * M_PI / 4., kVeryExact);
     r_hat = elevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(0.707106781186548, -0.707106781186548, 0.), kVeryExact));
+    EXPECT_TRUE(
+        AssertCompare(CompareVectors(r_hat, math::Vector3(0.707106781186548, -0.707106781186548, 0.), kVeryExact)));
   }
 
   // Checks for a curve with constant non zero superelevation.
@@ -531,31 +544,31 @@ TEST_F(MultilaneArcRoadCurveTest, ReferenceCurveRotation) {
     EXPECT_NEAR(wrap(rotation.pitch()), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), 3. * M_PI / 4., kVeryExact);
     math::Vector3 r_hat = superelevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(
-        CompareVectors(r_hat, math::Vector3(-0.353553390593274, -0.353553390593274, 0.866025403784439), kVeryExact));
+    EXPECT_TRUE(AssertCompare(
+        CompareVectors(r_hat, math::Vector3(-0.353553390593274, -0.353553390593274, 0.866025403784439), kVeryExact)));
 
     rotation = superelevated_dut.Rabg_of_p(0.5);
     EXPECT_NEAR(rotation.roll(), kSuperelevationOffset, kVeryExact);
     EXPECT_NEAR(wrap(rotation.pitch()), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -M_PI, kVeryExact);
     r_hat = superelevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(CompareVectors(r_hat, math::Vector3(0.0, -0.5, 0.866025403784439), kVeryExact));
+    EXPECT_TRUE(AssertCompare(CompareVectors(r_hat, math::Vector3(0.0, -0.5, 0.866025403784439), kVeryExact)));
 
     rotation = superelevated_dut.Rabg_of_p(0.75);
     EXPECT_NEAR(rotation.roll(), kSuperelevationOffset, kVeryExact);
     EXPECT_NEAR(wrap(rotation.pitch()), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -7. * M_PI / 8., kVeryExact);
     r_hat = superelevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(
-        CompareVectors(r_hat, math::Vector3(0.191341716182545, -0.461939766255643, 0.866025403784439), kVeryExact));
+    EXPECT_TRUE(AssertCompare(
+        CompareVectors(r_hat, math::Vector3(0.191341716182545, -0.461939766255643, 0.866025403784439), kVeryExact)));
 
     rotation = superelevated_dut.Rabg_of_p(1.);
     EXPECT_NEAR(rotation.roll(), kSuperelevationOffset, kVeryExact);
     EXPECT_NEAR(wrap(rotation.pitch()), kZeroPitch, kVeryExact);
     EXPECT_NEAR(wrap(rotation.yaw()), -3. * M_PI / 4., kVeryExact);
     r_hat = superelevated_dut.r_hat_of_Rabg(rotation);
-    EXPECT_TRUE(
-        CompareVectors(r_hat, math::Vector3(0.353553390593274, -0.353553390593274, 0.866025403784439), kVeryExact));
+    EXPECT_TRUE(AssertCompare(
+        CompareVectors(r_hat, math::Vector3(0.353553390593274, -0.353553390593274, 0.866025403784439), kVeryExact)));
   }
 }
 

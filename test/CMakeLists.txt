@@ -7,6 +7,7 @@ macro(add_dependencies_to_test target)
       target_include_directories(${target}
         PRIVATE
           ${PROJECT_SOURCE_DIR}/include
+          ${PROJECT_SOURCE_DIR}/test
       )
 
       set(MULTILANE_RESOURCE_ROOT ${PROJECT_SOURCE_DIR}/resources/)

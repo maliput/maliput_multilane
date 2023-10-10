@@ -32,9 +32,10 @@
 /* clang-format on */
 
 #include <gtest/gtest.h>
+#include <maliput/api/compare.h>
 #include <maliput/math/vector.h>
-#include <maliput/test_utilities/maliput_types_compare.h>
 
+#include "assert_compare.h"
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/junction.h"
 #include "maliput_multilane/lane.h"
@@ -45,6 +46,8 @@
 namespace maliput {
 namespace multilane {
 namespace {
+
+using test::AssertCompare;
 
 const double kLinearTolerance = 1e-6;
 const double kAngularTolerance = 1e-6;
@@ -82,12 +85,13 @@ GTEST_TEST(MultilaneSegmentsTest, MultipleLanes) {
 
   EXPECT_EQ(rg.CheckInvariants(), std::vector<std::string>());
 
-  EXPECT_TRUE(api::test::IsRBoundsClose(l0->lane_bounds(0.), {-8., kHalfLaneWidth}, kZeroTolerance));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l0->segment_bounds(0.), {-8., 32.}, kZeroTolerance));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l1->lane_bounds(0.), {-kHalfLaneWidth, kHalfLaneWidth}, kZeroTolerance));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l1->segment_bounds(0.), {-23., 17.}, kZeroTolerance));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l2->lane_bounds(0.), {-kHalfLaneWidth, 2.}, kZeroTolerance));
-  EXPECT_TRUE(api::test::IsRBoundsClose(l2->segment_bounds(0.), {-38., 2.}, kZeroTolerance));
+  EXPECT_TRUE(AssertCompare(api::IsRBoundsClose(l0->lane_bounds(0.), {-8., kHalfLaneWidth}, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(api::IsRBoundsClose(l0->segment_bounds(0.), {-8., 32.}, kZeroTolerance)));
+  EXPECT_TRUE(
+      AssertCompare(api::IsRBoundsClose(l1->lane_bounds(0.), {-kHalfLaneWidth, kHalfLaneWidth}, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(api::IsRBoundsClose(l1->segment_bounds(0.), {-23., 17.}, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(api::IsRBoundsClose(l2->lane_bounds(0.), {-kHalfLaneWidth, 2.}, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(api::IsRBoundsClose(l2->segment_bounds(0.), {-38., 2.}, kZeroTolerance)));
 }
 
 }  // namespace

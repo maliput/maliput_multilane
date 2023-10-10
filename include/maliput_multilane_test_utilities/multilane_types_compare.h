@@ -31,7 +31,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <maliput/test_utilities/maliput_types_compare.h>
+#include <maliput/api/compare.h>
 
 #include "maliput_multilane/builder.h"
 #include "maliput_multilane/connection.h"
@@ -124,7 +124,7 @@ class HBoundsMatcher : public MatcherInterface<const api::HBounds&> {
       : elevation_bounds_(elevation_bounds), tolerance_(tolerance) {}
 
   bool MatchAndExplain(const api::HBounds& other, MatchResultListener*) const override {
-    return api::test::IsHBoundsClose(elevation_bounds_, other, tolerance_);
+    return !api::IsHBoundsClose(elevation_bounds_, other, tolerance_).message.has_value();
   }
 
   void DescribeTo(std::ostream* os) const override {

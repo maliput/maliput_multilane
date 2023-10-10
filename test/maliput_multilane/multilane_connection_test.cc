@@ -36,20 +36,22 @@
 #include <sstream>
 
 #include <gtest/gtest.h>
+#include <maliput/math/compare.h>
 #include <maliput/math/vector.h>
-#include <maliput/test_utilities/maliput_math_compare.h>
 
+#include "assert_compare.h"
 #include "maliput_multilane/arc_road_curve.h"
 #include "maliput_multilane/cubic_polynomial.h"
 #include "maliput_multilane/line_road_curve.h"
 #include "maliput_multilane/make_road_curve_for_connection.h"
 #include "maliput_multilane_test_utilities/multilane_types_compare.h"
 
+using ::maliput::math::CompareVectors;
+using ::maliput::multilane::test::AssertCompare;
+
 namespace maliput {
 namespace multilane {
 namespace test {
-
-using maliput::math::test::CompareVectors;
 
 // Compares equality within @p tolerance of @p cubic1 and @p cubic2
 // coefficients.
@@ -91,8 +93,6 @@ using maliput::math::test::CompareVectors;
 }  // namespace test
 
 namespace {
-
-using maliput::math::test::CompareVectors;
 
 // EndpointXy checks.
 GTEST_TEST(EndpointXyTest, DefaultConstructor) {
@@ -273,16 +273,17 @@ TEST_F(MultilaneConnectionTest, ArcRoadCurveValidation) {
   EXPECT_NE(dynamic_cast<ArcRoadCurve*>(road_curve.get()), nullptr);
   // Checks that the road curve starts and ends at given endpoints.
   const math::Vector3 flat_origin = road_curve->W_of_prh(0., 0., 0.);
-  EXPECT_TRUE(
+  EXPECT_TRUE(AssertCompare(
       CompareVectors(math::Vector3(flat_dut.start().xy().x(), flat_dut.start().xy().y(), flat_dut.start().z().z()),
-                     flat_origin, kZeroTolerance));
-  EXPECT_TRUE(CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
-                             flat_origin, kZeroTolerance));
+                     flat_origin, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(
+      CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
+                     flat_origin, kZeroTolerance)));
   const math::Vector3 flat_end = road_curve->W_of_prh(1., 0., 0.);
-  EXPECT_TRUE(CompareVectors(math::Vector3(flat_dut.end().xy().x(), flat_dut.end().xy().y(), flat_dut.end().z().z()),
-                             flat_end, kVeryExact));
-  EXPECT_TRUE(CompareVectors(math::Vector3(kEndEndpoint.xy().x(), kEndEndpoint.xy().y(), kEndEndpoint.z().z()),
-                             flat_end, kVeryExact));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
+      math::Vector3(flat_dut.end().xy().x(), flat_dut.end().xy().y(), flat_dut.end().z().z()), flat_end, kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
+      math::Vector3(kEndEndpoint.xy().x(), kEndEndpoint.xy().y(), kEndEndpoint.z().z()), flat_end, kVeryExact)));
   // Checks that elevation and superelevation polynomials are correctly built
   // for the trivial case of a flat dut.
   EXPECT_TRUE(test::IsCubicPolynomialClose(road_curve->elevation(), CubicPolynomial(), kZeroTolerance));
@@ -295,18 +296,19 @@ TEST_F(MultilaneConnectionTest, ArcRoadCurveValidation) {
   std::unique_ptr<RoadCurve> complex_road_curve = MakeRoadCurveFor(complex_dut);
   // Checks that the road curve starts and ends at given endpoints.
   const math::Vector3 complex_origin = complex_road_curve->W_of_prh(0., 0., 0.);
-  EXPECT_TRUE(CompareVectors(
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       math::Vector3(complex_dut.start().xy().x(), complex_dut.start().xy().y(), complex_dut.start().z().z()),
-      complex_origin, kZeroTolerance));
-  EXPECT_TRUE(CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
-                             complex_origin, kZeroTolerance));
+      complex_origin, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(
+      CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
+                     complex_origin, kZeroTolerance)));
   const math::Vector3 complex_end = complex_road_curve->W_of_prh(1., 0., 0.);
-  EXPECT_TRUE(
+  EXPECT_TRUE(AssertCompare(
       CompareVectors(math::Vector3(complex_dut.end().xy().x(), complex_dut.end().xy().y(), complex_dut.end().z().z()),
-                     complex_end, kVeryExact));
-  EXPECT_TRUE(CompareVectors(
+                     complex_end, kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       math::Vector3(kEndElevatedEndpoint.xy().x(), kEndElevatedEndpoint.xy().y(), kEndElevatedEndpoint.z().z()),
-      complex_end, kVeryExact));
+      complex_end, kVeryExact)));
   EXPECT_TRUE(test::IsCubicPolynomialClose(
       complex_road_curve->elevation(), CubicPolynomial(0., 0., -0.32476276288217043, 0.549841841921447), kVeryExact));
   EXPECT_TRUE(test::IsCubicPolynomialClose(complex_road_curve->superelevation(),
@@ -326,16 +328,17 @@ TEST_F(MultilaneConnectionTest, LineRoadCurveValidation) {
 
   // Checks that the road curve starts and ends at given endpoints.
   const math::Vector3 flat_origin = road_curve->W_of_prh(0., 0., 0.);
-  EXPECT_TRUE(
+  EXPECT_TRUE(AssertCompare(
       CompareVectors(math::Vector3(flat_dut.start().xy().x(), flat_dut.start().xy().y(), flat_dut.start().z().z()),
-                     flat_origin, kZeroTolerance));
-  EXPECT_TRUE(CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
-                             flat_origin, kZeroTolerance));
+                     flat_origin, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(
+      CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
+                     flat_origin, kZeroTolerance)));
   const math::Vector3 flat_end = road_curve->W_of_prh(1., 0., 0.);
-  EXPECT_TRUE(CompareVectors(math::Vector3(flat_dut.end().xy().x(), flat_dut.end().xy().y(), flat_dut.end().z().z()),
-                             flat_end, kVeryExact));
-  EXPECT_TRUE(CompareVectors(math::Vector3(kEndEndpoint.xy().x(), kEndEndpoint.xy().y(), kEndEndpoint.z().z()),
-                             flat_end, kVeryExact));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
+      math::Vector3(flat_dut.end().xy().x(), flat_dut.end().xy().y(), flat_dut.end().z().z()), flat_end, kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
+      math::Vector3(kEndEndpoint.xy().x(), kEndEndpoint.xy().y(), kEndEndpoint.z().z()), flat_end, kVeryExact)));
   // Checks that elevation and superelevation polynomials are correctly built
   // for the trivial case of a flat dut.
   EXPECT_TRUE(test::IsCubicPolynomialClose(road_curve->elevation(), CubicPolynomial(), kZeroTolerance));
@@ -349,18 +352,19 @@ TEST_F(MultilaneConnectionTest, LineRoadCurveValidation) {
 
   // Checks that the road curve starts and ends at given endpoints.
   const math::Vector3 complex_origin = complex_road_curve->W_of_prh(0., 0., 0.);
-  EXPECT_TRUE(CompareVectors(
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       math::Vector3(complex_dut.start().xy().x(), complex_dut.start().xy().y(), complex_dut.start().z().z()),
-      complex_origin, kZeroTolerance));
-  EXPECT_TRUE(CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
-                             complex_origin, kZeroTolerance));
+      complex_origin, kZeroTolerance)));
+  EXPECT_TRUE(AssertCompare(
+      CompareVectors(math::Vector3(kStartEndpoint.xy().x(), kStartEndpoint.xy().y(), kStartEndpoint.z().z()),
+                     complex_origin, kZeroTolerance)));
   const math::Vector3 complex_end = complex_road_curve->W_of_prh(1., 0., 0.);
-  EXPECT_TRUE(
+  EXPECT_TRUE(AssertCompare(
       CompareVectors(math::Vector3(complex_dut.end().xy().x(), complex_dut.end().xy().y(), complex_dut.end().z().z()),
-                     complex_end, kVeryExact));
-  EXPECT_TRUE(CompareVectors(
+                     complex_end, kVeryExact)));
+  EXPECT_TRUE(AssertCompare(CompareVectors(
       math::Vector3(kEndElevatedEndpoint.xy().x(), kEndElevatedEndpoint.xy().y(), kEndElevatedEndpoint.z().z()),
-      complex_end, kVeryExact));
+      complex_end, kVeryExact)));
   EXPECT_TRUE(test::IsCubicPolynomialClose(complex_road_curve->elevation(),
                                            CubicPolynomial(0., 0., -0.646446609406726, 0.764297739604484), kVeryExact));
   EXPECT_TRUE(test::IsCubicPolynomialClose(complex_road_curve->superelevation(),

@@ -38,14 +38,14 @@
 #include <vector>
 
 #include <gtest/gtest.h>
+#include <maliput/api/compare.h>
 #include <maliput/api/lane_data.h>
 #include <maliput/common/assertion_error.h>
 #include <maliput/common/maliput_copyable.h>
 #include <maliput/math/quaternion.h>
 #include <maliput/math/vector.h>
-#include <maliput/test_utilities/check_id_indexing.h>
-#include <maliput/test_utilities/maliput_types_compare.h>
 
+#include "assert_compare.h"
 #include "maliput_multilane_test_utilities/multilane_types_compare.h"
 
 namespace maliput {
@@ -53,6 +53,7 @@ namespace multilane {
 namespace {
 
 using Which = api::LaneEnd::Which;
+using maliput::multilane::test::AssertCompare;
 
 // StartReference::Spec using an Endpoint.
 GTEST_TEST(StartReferenceSpecTest, Endpoint) {
@@ -179,7 +180,7 @@ GTEST_TEST(MultilaneBuilderTest, ParameterConstructor) {
   Builder builder(kLaneWidth, kElevationBounds, kLinearTolerance, kAngularTolerance, kScaleLength, kComputationPolicy,
                   std::make_unique<GroupFactory>());
   EXPECT_EQ(builder.get_lane_width(), kLaneWidth);
-  EXPECT_TRUE(api::test::IsHBoundsClose(builder.get_elevation_bounds(), kElevationBounds, 0.));
+  EXPECT_TRUE(AssertCompare(api::IsHBoundsClose(builder.get_elevation_bounds(), kElevationBounds, 0.)));
   EXPECT_EQ(builder.get_linear_tolerance(), kLinearTolerance);
   EXPECT_EQ(builder.get_angular_tolerance(), kAngularTolerance);
   EXPECT_EQ(builder.get_scale_length(), kScaleLength);
@@ -343,7 +344,8 @@ GTEST_TEST(MultilaneBuilderTest, Fig8) {
     EXPECT_EQ(bp->GetBSide()->size(), 1);
   }
 
-  EXPECT_TRUE(api::test::CheckIdIndexing(rg.get()));
+  const auto check_id_indexing = api::CheckIdIndexing(rg.get());
+  EXPECT_FALSE(check_id_indexing.has_value()) << check_id_indexing.value();
 };
 
 GTEST_TEST(MultilaneBuilderTest, QuadRing) {
@@ -457,7 +459,8 @@ GTEST_TEST(MultilaneBuilderTest, QuadRing) {
     }
   }
 
-  EXPECT_TRUE(api::test::CheckIdIndexing(rg.get()));
+  const auto check_id_indexing = api::CheckIdIndexing(rg.get());
+  EXPECT_FALSE(check_id_indexing.has_value()) << check_id_indexing.value();
 };
 
 // Holds common properties for reference-to-reference curve primitive tests.
@@ -510,8 +513,8 @@ TEST_F(MultilaneBuilderReferenceCurvePrimitivesTest, LineSegment) {
     // applied.
     const math::Vector3 lane_start_geo =
         start_reference_curve + (kRefR0 + static_cast<double>(i) * kLaneWidth) * r_versor;
-    EXPECT_TRUE(api::test::IsInertialPositionClose(lane->ToInertialPosition({0., 0., 0.}),
-                                                   api::InertialPosition::FromXyz(lane_start_geo), kLinearTolerance));
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
+        lane->ToInertialPosition({0., 0., 0.}), api::InertialPosition::FromXyz(lane_start_geo), kLinearTolerance)));
     // Checks lane start and end BranchPoint.
     const api::BranchPoint* const start_bp = lane->GetBranchPoint(api::LaneEnd::kStart);
     EXPECT_EQ(start_bp->GetASide()->size(), 1);
@@ -557,8 +560,9 @@ TEST_F(MultilaneBuilderReferenceCurvePrimitivesTest, ArcSegment) {
     // applied.
     const math::Vector3 lane_start_inertial =
         start_reference_curve + (kRefR0 + static_cast<double>(i) * kLaneWidth) * r_versor;
-    EXPECT_TRUE(api::test::IsInertialPositionClose(
-        lane->ToInertialPosition({0., 0., 0.}), api::InertialPosition::FromXyz(lane_start_inertial), kLinearTolerance));
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(lane->ToInertialPosition({0., 0., 0.}),
+                                                           api::InertialPosition::FromXyz(lane_start_inertial),
+                                                           kLinearTolerance)));
     // Checks lane start and end BranchPoint.
     const api::BranchPoint* const start_bp = lane->GetBranchPoint(api::LaneEnd::kStart);
     EXPECT_EQ(start_bp->GetASide()->size(), 1);
@@ -712,8 +716,9 @@ TEST_F(MultilaneBuilderLaneToLanePrimitivesTest, FlatLineSegment) {
     // applied.
     const math::Vector3 lane_start_inertial =
         start_reference_curve + (-kRefR0 + static_cast<double>(i) * kLaneWidth) * r_versor;
-    EXPECT_TRUE(api::test::IsInertialPositionClose(
-        lane->ToInertialPosition({0., 0., 0.}), api::InertialPosition::FromXyz(lane_start_inertial), kLinearTolerance));
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(lane->ToInertialPosition({0., 0., 0.}),
+                                                           api::InertialPosition::FromXyz(lane_start_inertial),
+                                                           kLinearTolerance)));
     // Checks lane start and end BranchPoint.
     const api::BranchPoint* const start_bp = lane->GetBranchPoint(api::LaneEnd::kStart);
     EXPECT_EQ(start_bp->GetASide()->size(), 1);
@@ -763,13 +768,13 @@ TEST_F(MultilaneBuilderLaneToLanePrimitivesTest, ElevatedEndLineSegment) {
     // Checks lane start inertial position to verify that spacing is correctly
     // applied.
     const math::Vector3 r_offset = (-kRefR0 + static_cast<double>(i) * kLaneWidth) * r_versor;
-    EXPECT_TRUE(api::test::IsInertialPositionClose(lane->ToInertialPosition({0., 0., 0.}),
-                                                   api::InertialPosition::FromXyz(start_reference_curve + r_offset),
-                                                   kLinearTolerance));
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
+        lane->ToInertialPosition({0., 0., 0.}), api::InertialPosition::FromXyz(start_reference_curve + r_offset),
+        kLinearTolerance)));
     // Checks lane end inertial position to verify elevation is correctly applied.
-    EXPECT_TRUE(api::test::IsInertialPositionClose(lane->ToInertialPosition({lane->length(), 0., 0.}),
-                                                   api::InertialPosition::FromXyz(end_reference_curve + r_offset),
-                                                   kLinearTolerance));
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
+        lane->ToInertialPosition({lane->length(), 0., 0.}),
+        api::InertialPosition::FromXyz(end_reference_curve + r_offset), kLinearTolerance)));
     // Checks lane start and end BranchPoint.
     const api::BranchPoint* const start_bp = lane->GetBranchPoint(api::LaneEnd::kStart);
     EXPECT_EQ(start_bp->GetASide()->size(), 1);
@@ -816,8 +821,9 @@ TEST_F(MultilaneBuilderLaneToLanePrimitivesTest, ArcSegment) {
     // applied.
     const math::Vector3 lane_start_inertial =
         start_reference_curve + (-kRefR0 + static_cast<double>(i) * kLaneWidth) * r_versor;
-    EXPECT_TRUE(api::test::IsInertialPositionClose(
-        lane->ToInertialPosition({0., 0., 0.}), api::InertialPosition::FromXyz(lane_start_inertial), kLinearTolerance));
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(lane->ToInertialPosition({0., 0., 0.}),
+                                                           api::InertialPosition::FromXyz(lane_start_inertial),
+                                                           kLinearTolerance)));
     // Checks lane start and end BranchPoint.
     const api::BranchPoint* const start_bp = lane->GetBranchPoint(api::LaneEnd::kStart);
     EXPECT_EQ(start_bp->GetASide()->size(), 1);
@@ -867,14 +873,14 @@ TEST_F(MultilaneBuilderLaneToLanePrimitivesTest, ElevatedEndArcSegment) {
     // Checks lane start inertial position to verify that spacing is correctly
     // applied.
     const math::Vector3 r_offset_start = (-kRefR0 + static_cast<double>(i) * kLaneWidth) * r_versor_start;
-    EXPECT_TRUE(api::test::IsInertialPositionClose(
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
         lane->ToInertialPosition({0., 0., 0.}), api::InertialPosition::FromXyz(start_reference_curve + r_offset_start),
-        kLinearTolerance));
+        kLinearTolerance)));
     // Checks lane end inertial position to verify elevation is correctly applied.
     const math::Vector3 r_offset_end = (-kRefR0 + static_cast<double>(i) * kLaneWidth) * r_versor_end;
-    EXPECT_TRUE(api::test::IsInertialPositionClose(lane->ToInertialPosition({lane->length(), 0., 0.}),
-                                                   api::InertialPosition::FromXyz(end_reference_curve + r_offset_end),
-                                                   kLinearTolerance));
+    EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(
+        lane->ToInertialPosition({lane->length(), 0., 0.}),
+        api::InertialPosition::FromXyz(end_reference_curve + r_offset_end), kLinearTolerance)));
     // Checks lane start and end BranchPoint.
     const api::BranchPoint* const start_bp = lane->GetBranchPoint(api::LaneEnd::kStart);
     EXPECT_EQ(start_bp->GetASide()->size(), 1);
@@ -976,21 +982,21 @@ class TurnBuildProcedure : public BuildProcedure {
     for (double r = lbounds.min(); r <= lbounds.max(); r += lane_width / 10) {
       // Since the curved lane heading at the origin is opposite to that of
       // the straight lane by construction, the r-offset sign is reversed.
-      EXPECT_TRUE(api::test::IsInertialPositionClose(straight_lane->ToInertialPosition({kS, r, kH}),
-                                                     curved_lane->ToInertialPosition({kS, -r, kH}),
-                                                     road_geometry.linear_tolerance()))
+      EXPECT_TRUE(AssertCompare(api::IsInertialPositionClose(straight_lane->ToInertialPosition({kS, r, kH}),
+                                                             curved_lane->ToInertialPosition({kS, -r, kH}),
+                                                             road_geometry.linear_tolerance())))
           << "Position discontinuity at r = " << r;
       // Since the curved lane heading at the origin is opposite to that of
       // the straight lane by construction, the resulting orientation is
       // rotated pi radians about the h-axis.
       const api::Rotation rrotation = curved_lane->GetOrientation({kS, -r, kH});
       const math::Quaternion pi_rotation(M_PI, math::Vector3(0., 0., 1.));
-      EXPECT_TRUE(api::test::IsRotationClose(straight_lane->GetOrientation({kS, r, kH}),
-                                             // Applies a pi radians rotation around the h-axis to the curved
-                                             // lane orientation (i.e. apply an intrinsic pi radians rotation
-                                             // about the lane local z-axis, effectively post-multiplying).
-                                             api::Rotation::FromQuat(rrotation.quat() * pi_rotation),
-                                             road_geometry.angular_tolerance()))
+      EXPECT_TRUE(AssertCompare(api::IsRotationClose(straight_lane->GetOrientation({kS, r, kH}),
+                                                     // Applies a pi radians rotation around the h-axis to the curved
+                                                     // lane orientation (i.e. apply an intrinsic pi radians rotation
+                                                     // about the lane local z-axis, effectively post-multiplying).
+                                                     api::Rotation::FromQuat(rrotation.quat() * pi_rotation),
+                                                     road_geometry.angular_tolerance())))
           << " Orientation discontinuity at r = " << r;
     }
   }
@@ -1418,7 +1424,8 @@ class MultilaneBuilderMultilaneCrossTest : public ::testing::Test {
     }
     EXPECT_EQ(rg->num_branch_points(), 20);
 
-    EXPECT_TRUE(api::test::CheckIdIndexing(rg.get()));
+    const auto check_id_indexing = api::CheckIdIndexing(rg.get());
+    EXPECT_FALSE(check_id_indexing.has_value()) << check_id_indexing.value();
   }
 };
 

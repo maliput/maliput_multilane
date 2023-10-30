@@ -35,8 +35,8 @@
 
 #include <maliput/api/lane_data.h>
 #include <maliput/common/maliput_copyable.h>
-#include <maliput/drake/systems/analysis/antiderivative_function.h>
-#include <maliput/drake/systems/analysis/scalar_initial_value_problem.h>
+#include <maliput/drake/arc_length_integrator.h>
+#include <maliput/drake/inverse_arc_length_integrator.h>
 #include <maliput/math/roll_pitch_yaw.h>
 #include <maliput/math/vector.h>
 
@@ -380,10 +380,10 @@ class RoadCurve {
   double relative_tolerance_;
   // The inverse arc length IVP, or the parameter p as a function of the
   // arc length s.
-  std::unique_ptr<maliput::drake::systems::ScalarInitialValueProblem<double>> p_from_s_ivp_;
+  std::unique_ptr<maliput::drake::InverseArcLengthIntegrator> p_from_s_ivp_;
   // The arc length function, or the arc length s as a function of the
   // parameter p.
-  std::unique_ptr<maliput::drake::systems::AntiderivativeFunction<double>> s_from_p_func_;
+  std::unique_ptr<maliput::drake::ArcLengthIntegrator> s_from_p_func_;
 };
 
 }  // namespace multilane

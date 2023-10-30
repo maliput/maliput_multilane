@@ -39,14 +39,11 @@ target_link_libraries(maliput_multilane
   PUBLIC
     maliput::api
     maliput::base
-    maliput::drake_systems_analysis
+    maliput::drake
     maliput::geometry_base
     maliput::common
     maliput::math
   PRIVATE
-    maliput::drake_common
-    maliput::drake_common_trajectories
-    maliput::drake_systems_framework
     yaml-cpp
 )
 

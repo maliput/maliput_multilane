@@ -35,9 +35,7 @@
 #include <maliput/common/maliput_abort.h>
 #include <maliput/common/maliput_throw.h>
 #include <maliput/common/maliput_unused.h>
-#include <maliput/drake/common/eigen_types.h>
-#include <maliput/drake/systems/analysis/integrator_base.h>
-#include <maliput/drake/systems/analysis/scalar_dense_output.h>
+#include <maliput/drake/integrator_configuration.h>
 
 namespace maliput {
 namespace multilane {
@@ -59,13 +57,8 @@ struct ArcLengthDerivativeFunction {
   // @pre The given parameter vector @p k is bi-dimensional (holding r and h
   //      coordinates only).
   // @throws std::logic_error if preconditions are not met.
-  double operator()(const double& p, const maliput::drake::VectorX<double>& k) const {
-    if (k.size() != 2) {
-      throw std::logic_error(
-          "Arc length derivative expects only r and"
-          " h coordinates as parameters, respectively.");
-    }
-    return road_curve_->W_prime_of_prh(p, k(0), k(1), road_curve_->Rabg_of_p(p), road_curve_->elevation().f_dot_p(p))
+  double operator()(const double& p, const math::Vector2& k) const {
+    return road_curve_->W_prime_of_prh(p, k[0], k[1], road_curve_->Rabg_of_p(p), road_curve_->elevation().f_dot_p(p))
         .norm();
   }
 
@@ -91,15 +84,10 @@ struct InverseArcLengthODEFunction {
   // @pre The given parameter vector @p k is bi-dimensional (holding r and h
   //      coordinates only).
   // @throws std::logic_error if preconditions are not met.
-  double operator()(const double& s, const double& p, const maliput::drake::VectorX<double>& k) {
+  double operator()(const double& s, const double& p, const math::Vector2& k) {
     maliput::common::unused(s);
-    if (k.size() != 2) {
-      throw std::logic_error(
-          "Inverse arc length ODE expects only r and"
-          " h coordinates as parameters, respectively.");
-    }
     return 1.0 /
-           road_curve_->W_prime_of_prh(p, k(0), k(1), road_curve_->Rabg_of_p(p), road_curve_->elevation().f_dot_p(p))
+           road_curve_->W_prime_of_prh(p, k[0], k[1], road_curve_->Rabg_of_p(p), road_curve_->elevation().f_dot_p(p))
                .norm();
   }
 
@@ -127,18 +115,7 @@ RoadCurve::RoadCurve(double linear_tolerance, double scale_length, const CubicPo
   // to 0 by default.
   const double initial_s_value = 0.0;
   // Sets default r and h coordinates to 0 by default.
-  const maliput::drake::VectorX<double> default_parameters = maliput::drake::VectorX<double>::Zero(2);
-
-  // Instantiates s(p) and p(s) mappings with default values.
-  const maliput::drake::systems::AntiderivativeFunction<double>::IntegrableFunctionContext s_from_p_func_values(
-      initial_p_value, default_parameters);
-  s_from_p_func_ = std::make_unique<maliput::drake::systems::AntiderivativeFunction<double>>(
-      ArcLengthDerivativeFunction(this), s_from_p_func_values);
-
-  const maliput::drake::systems::ScalarInitialValueProblem<double>::ScalarOdeContext p_from_s_ivp_values(
-      initial_s_value, initial_p_value, default_parameters);
-  p_from_s_ivp_ = std::make_unique<maliput::drake::systems::ScalarInitialValueProblem<double>>(
-      InverseArcLengthODEFunction(this), p_from_s_ivp_values);
+  const math::Vector2 default_parameters(0., 0.);
 
   // Relative tolerance in path length is roughly bounded by e/L, where e is
   // the linear tolerance and L is the scale length. This can be seen by
@@ -149,34 +126,44 @@ RoadCurve::RoadCurve(double linear_tolerance, double scale_length, const CubicPo
   // bounded by 4e/L.
   relative_tolerance_ = linear_tolerance_ / scale_length_;
 
-  // Sets `s_from_p`'s integration accuracy and step sizes. Said steps
-  // should not be too large, because that could make accuracy control
-  // fail, nor too small to avoid wasting cycles. The nature of the
-  // problem at hand varies with the parameterization of the RoadCurve,
-  // and so will optimal step sizes (in terms of their efficiency vs.
-  // accuracy balance). However, for the time being, the following
-  // constants (considering 0.0 <= p <= 1.0) work well as a heuristic
-  // approximation to appropriate step sizes.
-  maliput::drake::systems::IntegratorBase<double>& s_from_p_integrator = s_from_p_func_->get_mutable_integrator();
-  s_from_p_integrator.request_initial_step_size_target(0.1);
-  s_from_p_integrator.set_maximum_step_size(1.0);
-  // Note: Setting this tolerance is necessary to satisfy the
-  // road geometry invariants (i.e., CheckInvariants()) in Builder::Build().
-  // Consider modifying this accuracy if other tolerances are modified
-  // elsewhere.
-  s_from_p_integrator.set_target_accuracy(relative_tolerance_ * 1e-2);
+  const struct maliput::drake::IntegratorConfiguration arc_length_integrator_config {
+    initial_p_value,        /* parameter_lower_bound */
+        initial_s_value,    /* image_lower_bound */
+        default_parameters, /* k */
+        // Sets `s_from_p`'s integration accuracy and step sizes. Said steps
+        // should not be too large, because that could make accuracy control
+        // fail, nor too small to avoid wasting cycles. The nature of the
+        // problem at hand varies with the parameterization of the RoadCurve,
+        // and so will optimal step sizes (in terms of their efficiency vs.
+        // accuracy balance). However, for the time being, the following
+        // constants (considering 0.0 <= p <= 1.0) work well as a heuristic
+        // approximation to appropriate step sizes.
+        0.1,                       /* initial_step_size_target */
+        1.0,                       /* maximum_step_size */
+        relative_tolerance_ * 1e-2 /* target_accuracy */
+  };
 
-  // Sets `p_from_s`'s integration accuracy and step sizes. Said steps
-  // should not be too large, because that could make accuracy control
-  // fail, nor too small to avoid wasting cycles. The nature of the
-  // problem at hand varies with the shape of the RoadCurve, and so will
-  // optimal step sizes (in terms of their efficiency vs. accuracy balance).
-  // However, for the time being, the following proportions of the scale
-  // length work well as a heuristic approximation to appropriate step sizes.
-  maliput::drake::systems::IntegratorBase<double>& p_from_s_integrator = p_from_s_ivp_->get_mutable_integrator();
-  p_from_s_integrator.request_initial_step_size_target(0.1 * scale_length);
-  p_from_s_integrator.set_maximum_step_size(scale_length);
-  p_from_s_integrator.set_target_accuracy(relative_tolerance_);
+  const struct maliput::drake::IntegratorConfiguration inverse_arc_length_integrator_config {
+    initial_p_value,        /* parameter_lower_bound */
+        initial_s_value,    /* image_lower_bound */
+        default_parameters, /* k */
+        // Sets `p_from_s`'s integration accuracy and step sizes. Said steps
+        // should not be too large, because that could make accuracy control
+        // fail, nor too small to avoid wasting cycles. The nature of the
+        // problem at hand varies with the shape of the RoadCurve, and so will
+        // optimal step sizes (in terms of their efficiency vs. accuracy balance).
+        // However, for the time being, the following proportions of the scale
+        // length work well as a heuristic approximation to appropriate step sizes.
+        0.1 * scale_length, /* initial_step_size_target */
+        scale_length,       /* maximum_step_size */
+        relative_tolerance_ /* target_accuracy */
+  };
+
+  // Instantiates s(p) and p(s) mappings with default values.
+  s_from_p_func_ = std::make_unique<maliput::drake::ArcLengthIntegrator>(ArcLengthDerivativeFunction(this),
+                                                                         arc_length_integrator_config);
+  p_from_s_ivp_ = std::make_unique<maliput::drake::InverseArcLengthIntegrator>(InverseArcLengthODEFunction(this),
+                                                                               inverse_arc_length_integrator_config);
 }
 
 bool RoadCurve::AreFastComputationsAccurate(double r) const {
@@ -190,21 +177,8 @@ std::function<double(double)> RoadCurve::OptimizeCalcSFromP(double r) const {
   MALIPUT_THROW_UNLESS(CalcMinimumRadiusAtOffset(r) > 0.0);
   const double absolute_tolerance = relative_tolerance_ * 1.;
   if (computation_policy() == ComputationPolicy::kPreferAccuracy && !AreFastComputationsAccurate(r)) {
-    // Populates parameter vector with (r, h) coordinate values.
-    maliput::drake::systems::AntiderivativeFunction<double>::IntegrableFunctionContext context;
-    context.k = (maliput::drake::VectorX<double>(2) << r, 0.0).finished();
-    // Prepares dense output for shared ownership, as std::function
-    // instances only take copyable callables.
-    const std::shared_ptr<maliput::drake::systems::ScalarDenseOutput<double>> dense_output{
-        s_from_p_func_->MakeDenseEvalFunction(1.0, context)};
-    MALIPUT_DEMAND(dense_output->start_time() <= 0.);
-    MALIPUT_DEMAND(dense_output->end_time() >= 1.);
-    return [dense_output, absolute_tolerance](double p) -> double {
-      // Saturates p to lie within the [0., 1.] interval.
-      const double saturated_p = std::min(std::max(p, 0.), 1.);
-      MALIPUT_THROW_UNLESS(std::abs(saturated_p - p) < absolute_tolerance);
-      return dense_output->EvaluateScalar(saturated_p);
-    };
+    // Populates parameter vector with (r, h=0.0) coordinate values.
+    return s_from_p_func_->IntegralFunction(0.0, 1.0, math::Vector2(r, 0.0), absolute_tolerance);
   }
   return [this, r, absolute_tolerance](double p) {
     // Saturates p to lie within the [0., 1.] interval.
@@ -215,10 +189,8 @@ std::function<double(double)> RoadCurve::OptimizeCalcSFromP(double r) const {
 }
 
 double RoadCurve::CalcSFromP(double p, double r) const {
-  // Populates parameter vector with (r, h) coordinate values.
-  maliput::drake::systems::AntiderivativeFunction<double>::IntegrableFunctionContext context;
-  context.k = (maliput::drake::VectorX<double>(2) << r, 0.0).finished();
-  return s_from_p_func_->Evaluate(p, context);
+  // Populates parameter vector with (r, h=0.0) coordinate values.
+  return s_from_p_func_->Evaluate(p, math::Vector2(r, 0.0));
 }
 
 std::function<double(double)> RoadCurve::OptimizeCalcPFromS(double r) const {
@@ -226,21 +198,7 @@ std::function<double(double)> RoadCurve::OptimizeCalcPFromS(double r) const {
   const double full_length = CalcSFromP(1., r);
   const double absolute_tolerance = relative_tolerance_ * full_length;
   if (computation_policy() == ComputationPolicy::kPreferAccuracy && !AreFastComputationsAccurate(r)) {
-    // Populates parameter vector with (r, h) coordinate values.
-    maliput::drake::systems::ScalarInitialValueProblem<double>::ScalarOdeContext context;
-    context.k = (maliput::drake::VectorX<double>(2) << r, 0.0).finished();
-    // Prepares dense output for shared ownership, as std::function
-    // instances only take copyable callables.
-    const std::shared_ptr<maliput::drake::systems::ScalarDenseOutput<double>> dense_output{
-        p_from_s_ivp_->DenseSolve(full_length, context)};
-    MALIPUT_DEMAND(dense_output->start_time() <= 0.);
-    MALIPUT_DEMAND(dense_output->end_time() >= full_length);
-    return [dense_output, full_length, absolute_tolerance](double s) -> double {
-      // Saturates s to lie within the [0., full_length] interval.
-      const double saturated_s = std::min(std::max(s, 0.), full_length);
-      MALIPUT_THROW_UNLESS(std::abs(saturated_s - s) < absolute_tolerance);
-      return dense_output->EvaluateScalar(saturated_s);
-    };
+    return p_from_s_ivp_->InverseFunction(0.0, full_length, math::Vector2(r, 0.0), absolute_tolerance);
   }
   return [this, r, full_length, absolute_tolerance](double s) {
     // Saturates s to lie within the [0., full_length] interval.

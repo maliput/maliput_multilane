@@ -32,10 +32,7 @@ target_link_libraries(test_utilities
     maliput::math
     maliput_multilane
   PRIVATE
-    maliput::drake_common
-    maliput::drake_common_trajectories
-    maliput::drake_systems_analysis
-    maliput::drake_systems_framework
+    maliput::drake
 )
 
 

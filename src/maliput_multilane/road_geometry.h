@@ -111,6 +111,10 @@ class RoadGeometry : public api::RoadGeometry {
   // TODO(#45) Allow builder and loaders to set this value.
   math::Vector3 do_inertial_to_backend_frame_translation() const override { return {0., 0., 0.}; }
 
+  std::string DoBackendCustomCommand(const std::string& command) const override {
+    MALIPUT_THROW_MESSAGE("Method not implemented by maliput_multilane.");
+  }
+
   api::RoadGeometryId id_;
   double linear_tolerance_{};
   double angular_tolerance_{};

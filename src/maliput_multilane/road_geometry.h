@@ -116,7 +116,9 @@ class RoadGeometry : public api::RoadGeometry {
   }
 
   // TODO(slopez) Needs implementation.
-  std::string DoGeoReferenceInfo() const override { return {}; }
+  std::string DoGeoReferenceInfo() const override {
+    MALIPUT_THROW_MESSAGE("Method not implemented by maliput_multilane.");
+  }
 
   api::RoadGeometryId id_;
   double linear_tolerance_{};

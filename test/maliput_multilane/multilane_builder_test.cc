@@ -40,7 +40,7 @@
 #include <gtest/gtest.h>
 #include <maliput/api/compare.h>
 #include <maliput/api/lane_data.h>
-#include <maliput/common/assertion_error.h>
+#include <maliput/common/error.h>
 #include <maliput/common/maliput_copyable.h>
 #include <maliput/math/quaternion.h>
 #include <maliput/math/vector.h>

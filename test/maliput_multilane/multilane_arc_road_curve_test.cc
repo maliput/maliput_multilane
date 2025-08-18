@@ -33,7 +33,7 @@
 
 #include <gtest/gtest.h>
 #include <maliput/api/lane_data.h>
-#include <maliput/common/assertion_error.h>
+#include <maliput/common/error.h>
 #include <maliput/math/compare.h>
 
 #include "assert_compare.h"

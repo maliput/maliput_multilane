@@ -131,6 +131,9 @@ class Lane : public api::Lane {
     }
   }
 
+  // TODO(Santoi): Implement after supporting different types of lanes.
+  api::LaneType do_type() const override { return api::LaneType::kUnknown; }
+
   const api::BranchPoint* DoGetBranchPoint(const api::LaneEnd::Which which_end) const override;
 
   const api::LaneEndSet* DoGetConfluentBranches(const api::LaneEnd::Which which_end) const override;

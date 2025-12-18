@@ -117,6 +117,8 @@ class Segment : public api::Segment {
 
   const api::Lane* do_lane(int index) const override;
 
+  const api::LaneBoundary* do_boundary(int index) const override { return nullptr; }
+
   // Segment's ID.
   api::SegmentId id_;
   // Parent junction.

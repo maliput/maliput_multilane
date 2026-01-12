@@ -78,6 +78,50 @@ api::Rotation Lane::DoGetOrientation(const api::LanePosition& lane_pos) const {
   return api::Rotation::FromRpy(rotation.roll(), rotation.pitch(), rotation.yaw());
 }
 
+double Lane::DoGetCurvature(const api::LanePosition& lane_pos) const {
+  // Computes signed curvature as κ = dθ/ds using finite differences on the lane's heading.
+  //
+  // Sign convention (right-hand rule with respect to h-axis):
+  //   - Positive curvature: turning left (toward +r direction)
+  //   - Negative curvature: turning right (toward -r direction)
+  //
+  // TODO: This implementation does not account for the lateral offset (r) within the lane.
+  //       For curved roads, the curvature varies with r: paths at different lateral offsets
+  //       from the centerline have different curvatures (inner paths curve more sharply).
+  //       A more complete implementation would compute 3D path curvature at the actual (s, r, h)
+  //       position, similar to the maliput_malidrive implementation.
+  //
+  const double s = lane_pos.s();
+  const double r = lane_pos.r();
+  const double h = lane_pos.h();
+
+  // Use a small delta for finite difference, but ensure we stay within lane bounds.
+  const double delta = std::min(road_curve_->linear_tolerance(), lane_length_ / 2.0);
+
+  // Compute s values for finite difference, clamped to lane bounds.
+  const double s_minus = std::max(0.0, s - delta);
+  const double s_plus = std::min(lane_length_, s + delta);
+  const double ds = s_plus - s_minus;
+
+  // Guard against very short lanes where ds would be too small for reliable finite differences.
+  if (ds < delta / 10.0) {
+    return 0.0;
+  }
+
+  // Get headings at the two points.
+  const double heading_minus = DoGetOrientation({s_minus, r, h}).yaw();
+  const double heading_plus = DoGetOrientation({s_plus, r, h}).yaw();
+
+  // Compute the heading difference, handling angle wrap-around.
+  double dheading = heading_plus - heading_minus;
+  // Normalize to [-π, π]
+  while (dheading > M_PI) dheading -= 2.0 * M_PI;
+  while (dheading < -M_PI) dheading += 2.0 * M_PI;
+
+  // Signed curvature: positive = turning left, negative = turning right.
+  return dheading / ds;
+}
+
 api::LanePosition Lane::DoEvalMotionDerivatives(const api::LanePosition& position,
                                                 const api::IsoLaneVelocity& velocity) const {
   const double p = p_from_s_at_r0_(position.s());

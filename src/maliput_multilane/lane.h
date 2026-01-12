@@ -154,6 +154,8 @@ class Lane : public api::Lane {
 
   api::Rotation DoGetOrientation(const api::LanePosition& lane_pos) const override;
 
+  double DoGetCurvature(const api::LanePosition& lane_pos) const override;
+
   api::LanePosition DoEvalMotionDerivatives(const api::LanePosition& position,
                                             const api::IsoLaneVelocity& velocity) const override;
 

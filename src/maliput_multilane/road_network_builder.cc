@@ -39,6 +39,7 @@
 #include <maliput/base/manual_right_of_way_rule_state_provider.h>
 #include <maliput/base/manual_rulebook.h>
 #include <maliput/base/phase_ring_book_loader.h>
+#include <maliput/base/road_marking_book.h>
 #include <maliput/base/road_object_book.h>
 #include <maliput/base/road_rulebook_loader.h>
 #include <maliput/base/traffic_light_book.h>
@@ -182,7 +183,8 @@ std::unique_ptr<api::RoadNetwork> BuildOnRampMergeRoadNetwork(
                                             std::move(right_of_way_rule_state_provider), std::move(phase_provider),
                                             std::move(rule_registry), std::move(discrete_value_rule_state_provider),
                                             std::move(range_value_rule_state_provider),
-                                            std::make_unique<RoadObjectBook>(), std::make_unique<TrafficSignBook>());
+                                            std::make_unique<RoadObjectBook>(), std::make_unique<TrafficSignBook>(),
+                                            std::make_unique<RoadMarkingBook>());
 }
 
 }  // namespace multilane

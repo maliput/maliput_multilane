@@ -149,12 +149,12 @@ std::unique_ptr<api::RoadNetwork> BuildRoadNetwork(const RoadNetworkConfiguratio
       std::make_unique<ManualDiscreteValueRuleStateProvider>(rulebook.get());
   std::unique_ptr<ManualRangeValueRuleStateProvider> range_value_rule_state_provider =
       std::make_unique<ManualRangeValueRuleStateProvider>(rulebook.get());
-  return std::make_unique<api::RoadNetwork>(std::move(rg), std::move(rulebook), std::move(traffic_light_book),
-                                            std::move(intersection_book), std::move(phase_ring_book),
-                                            std::move(right_of_way_rule_state_provider), std::move(phase_provider),
-                                            std::move(rule_registry), std::move(discrete_value_rule_state_provider),
-                                            std::move(range_value_rule_state_provider),
-                                            std::make_unique<RoadObjectBook>(), std::make_unique<TrafficSignBook>());
+  return std::make_unique<api::RoadNetwork>(
+      std::move(rg), std::move(rulebook), std::move(traffic_light_book), std::move(intersection_book),
+      std::move(phase_ring_book), std::move(right_of_way_rule_state_provider), std::move(phase_provider),
+      std::move(rule_registry), std::move(discrete_value_rule_state_provider),
+      std::move(range_value_rule_state_provider), std::make_unique<RoadObjectBook>(),
+      std::make_unique<TrafficSignBook>(), std::make_unique<RoadMarkingBook>());
 }
 
 std::unique_ptr<api::RoadNetwork> BuildOnRampMergeRoadNetwork(
@@ -178,13 +178,12 @@ std::unique_ptr<api::RoadNetwork> BuildOnRampMergeRoadNetwork(
       std::make_unique<ManualDiscreteValueRuleStateProvider>(rulebook.get());
   std::unique_ptr<ManualRangeValueRuleStateProvider> range_value_rule_state_provider =
       std::make_unique<ManualRangeValueRuleStateProvider>(rulebook.get());
-  return std::make_unique<api::RoadNetwork>(std::move(rg), std::move(rulebook), std::move(traffic_light_book),
-                                            std::move(intersection_book), std::move(phase_ring_book),
-                                            std::move(right_of_way_rule_state_provider), std::move(phase_provider),
-                                            std::move(rule_registry), std::move(discrete_value_rule_state_provider),
-                                            std::move(range_value_rule_state_provider),
-                                            std::make_unique<RoadObjectBook>(), std::make_unique<TrafficSignBook>(),
-                                            std::make_unique<RoadMarkingBook>());
+  return std::make_unique<api::RoadNetwork>(
+      std::move(rg), std::move(rulebook), std::move(traffic_light_book), std::move(intersection_book),
+      std::move(phase_ring_book), std::move(right_of_way_rule_state_provider), std::move(phase_provider),
+      std::move(rule_registry), std::move(discrete_value_rule_state_provider),
+      std::move(range_value_rule_state_provider), std::make_unique<RoadObjectBook>(),
+      std::make_unique<TrafficSignBook>(), std::make_unique<RoadMarkingBook>());
 }
 
 }  // namespace multilane
